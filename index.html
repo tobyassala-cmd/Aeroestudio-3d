@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AeroStudio 3D - CAD Aeronáutico</title>
+  <title>AeroStudio 3D - CAD e Ingeniería Mecánica</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -12,7 +12,7 @@
     body { margin: 0; overflow: hidden; background-color: #0b1120; color: #f1f5f9; font-family: ui-sans-serif, system-ui, sans-serif; user-select: none; }
     #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; cursor: grab; }
     #canvas-container:active { cursor: grabbing; }
-    .ui-panel { z-index: 20; backdrop-filter: blur(14px); background-color: rgba(15, 23, 42, 0.92); border: 1px solid rgba(51, 65, 85, 0.65); }
+    .ui-panel { z-index: 20; backdrop-filter: blur(14px); background-color: rgba(15, 23, 42, 0.93); border: 1px solid rgba(51, 65, 85, 0.65); }
     .tab-btn.active { background-color: #0284c7 !important; color: #ffffff !important; border-color: #38bdf8 !important; }
     input[type=range] { accent-color: #38bdf8; }
     ::-webkit-scrollbar { width: 6px; }
@@ -22,10 +22,9 @@
 </head>
 <body>
 
-  <!-- Contenedor 3D -->
   <div id="canvas-container"></div>
 
-  <!-- Barra Superior -->
+  <!-- Encabezado Superior -->
   <header class="absolute top-0 left-0 right-0 p-3 sm:p-4 ui-panel border-b flex justify-between items-center">
     <div class="flex items-center space-x-3">
       <div class="w-9 h-9 rounded-lg bg-sky-600 flex items-center justify-center text-white shadow-lg shadow-sky-600/30">
@@ -33,19 +32,19 @@
       </div>
       <div>
         <h1 class="font-bold text-base sm:text-lg tracking-wide text-slate-100 flex items-center gap-2">
-          AeroStudio 3D <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">v3.5 Avanzado</span>
+          AeroStudio 3D <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">v4.0 Cinemática</span>
         </h1>
-        <p class="text-[11px] text-slate-400 hidden sm:block">Modelado modular por secciones, cinemática de mandos y simulación motriz</p>
+        <p class="text-[11px] text-slate-400 hidden sm:block">Clic Izq: Rotar | Clic Der: Trasladar (Pan) | Rueda: Zoom</p>
       </div>
     </div>
 
-    <!-- Controles de cámara ortogonal y captura -->
+    <!-- Modos de Cámara y Enfoques -->
     <div class="flex items-center space-x-2">
       <div class="flex bg-slate-800 p-1 rounded-lg border border-slate-700 text-xs">
-        <button onclick="setCameraView('iso')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Iso</button>
-        <button onclick="setCameraView('top')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Planta</button>
-        <button onclick="setCameraView('side')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Perfil</button>
-        <button onclick="setCameraView('front')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Frente</button>
+        <button onclick="setCameraView('iso')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Avión</button>
+        <button onclick="focusEngine()" class="px-2.5 py-1 rounded hover:bg-sky-600/80 bg-sky-950/60 text-sky-300 font-semibold border border-sky-600/50">Foco Motor</button>
+        <button onclick="setCameraView('top')" class="px-2 py-1 rounded hover:bg-slate-700 text-slate-200">Planta</button>
+        <button onclick="setCameraView('side')" class="px-2 py-1 rounded hover:bg-slate-700 text-slate-200">Perfil</button>
       </div>
       <button onclick="takeScreenshot()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 transition">
         <i class="fa-solid fa-camera mr-1"></i> Captura
@@ -56,7 +55,7 @@
   <!-- Panel Lateral Izquierdo -->
   <aside class="absolute left-2 sm:left-4 top-16 sm:top-20 bottom-3 w-80 sm:w-96 ui-panel rounded-xl flex flex-col overflow-hidden shadow-2xl">
     
-    <!-- Pestañas de Etapas -->
+    <!-- Pestañas Principales -->
     <div class="grid grid-cols-3 border-b border-slate-700 bg-slate-900/60 p-1 gap-1 text-xs font-semibold">
       <button id="tab-btn-struct" onclick="switchStage('struct')" class="tab-btn active py-2.5 px-1 rounded-lg flex flex-col items-center gap-1 border border-transparent transition text-white">
         <i class="fa-solid fa-cubes text-sm"></i>
@@ -72,41 +71,38 @@
       </button>
     </div>
 
-    <!-- Menú Scrollable -->
+    <!-- Contenido Scrollable -->
     <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
 
       <!-- ================= ETAPA 1: ESTRUCTURA ================= -->
       <div id="stage-struct" class="space-y-4">
-        
         <div class="flex items-center justify-between pb-1 border-b border-slate-700">
-          <span class="text-xs font-bold text-sky-400 uppercase tracking-wider">Secciones del Fuselaje</span>
+          <span class="text-xs font-bold text-sky-400 uppercase tracking-wider">Fuselaje por Secciones</span>
           <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
             <input type="checkbox" id="show-frames" onchange="buildAircraft()" checked> Cuadernas
           </label>
         </div>
 
-        <!-- 1. Morro -->
         <div class="p-2.5 bg-slate-900/70 rounded-lg border border-slate-800 space-y-2">
-          <span class="font-semibold text-slate-300 block text-[11px]">Sección 1: Morro (Carenado Frontal)</span>
+          <span class="font-semibold text-slate-300 block text-[11px]">Sección 1: Morro Frontal</span>
           <div>
             <div class="flex justify-between text-slate-400 mb-0.5">
-              <span>Longitud del Morro:</span>
+              <span>Longitud Morro:</span>
               <span id="val-nose-len" class="font-mono text-sky-400">1.6 m</span>
             </div>
             <input type="range" id="nose-len" min="0.8" max="2.8" step="0.1" value="1.6" oninput="buildAircraft()" class="w-full">
           </div>
           <div>
             <div class="flex justify-between text-slate-400 mb-0.5">
-              <span>Afilado / Conicidad Morro:</span>
+              <span>Conicidad Punta:</span>
               <span id="val-nose-taper" class="font-mono text-sky-400">45%</span>
             </div>
             <input type="range" id="nose-taper" min="20" max="80" step="5" value="45" oninput="buildAircraft()" class="w-full">
           </div>
         </div>
 
-        <!-- 2. Cabina y Fuselaje Central -->
         <div class="p-2.5 bg-slate-900/70 rounded-lg border border-slate-800 space-y-2">
-          <span class="font-semibold text-slate-300 block text-[11px]">Sección 2: Cabina y Fuselaje Central</span>
+          <span class="font-semibold text-slate-300 block text-[11px]">Sección 2: Cabina y Cono de Cola</span>
           <div>
             <div class="flex justify-between text-slate-400 mb-0.5">
               <span>Longitud Cabina:</span>
@@ -116,85 +112,43 @@
           </div>
           <div>
             <div class="flex justify-between text-slate-400 mb-0.5">
-              <span>Diámetro / Altura Fuselaje:</span>
+              <span>Diámetro Fuselaje:</span>
               <span id="val-fuse-width" class="font-mono text-sky-400">1.2 m</span>
             </div>
             <input type="range" id="fuse-width" min="0.7" max="2.2" step="0.1" value="1.2" oninput="buildAircraft()" class="w-full">
           </div>
-        </div>
-
-        <!-- 3. Cono de Cola -->
-        <div class="p-2.5 bg-slate-900/70 rounded-lg border border-slate-800 space-y-2">
-          <span class="font-semibold text-slate-300 block text-[11px]">Sección 3: Cono de Cola (Tailcone)</span>
           <div>
             <div class="flex justify-between text-slate-400 mb-0.5">
-              <span>Longitud del Cono Trasero:</span>
+              <span>Longitud Cono Cola:</span>
               <span id="val-tailcone-len" class="font-mono text-sky-400">3.4 m</span>
             </div>
             <input type="range" id="tailcone-len" min="1.8" max="6.0" step="0.2" value="3.4" oninput="buildAircraft()" class="w-full">
           </div>
         </div>
 
-        <!-- Alas y Empenajes -->
         <div class="pt-2 border-t border-slate-700 space-y-3">
-          <div class="flex items-center justify-between pb-1">
-            <span class="text-xs font-bold text-sky-400 uppercase tracking-wider">Superficies de Vuelo</span>
-            <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
-              <input type="checkbox" id="show-ribs" onchange="buildAircraft()" checked> Costillas
-            </label>
-          </div>
-
+          <span class="text-xs font-bold text-sky-400 uppercase tracking-wider block">Superficies Alares</span>
           <div>
             <div class="flex justify-between text-slate-300 mb-0.5">
-              <span>Envergadura Alar ($b$):</span>
+              <span>Envergadura:</span>
               <span id="val-wing-span" class="font-mono text-sky-400">10.0 m</span>
             </div>
             <input type="range" id="wing-span" min="5" max="18" step="0.5" value="10" oninput="buildAircraft()" class="w-full">
           </div>
-
           <div>
             <div class="flex justify-between text-slate-300 mb-0.5">
-              <span>Cuerda Raíz:</span>
+              <span>Cuerda:</span>
               <span id="val-wing-chord" class="font-mono text-sky-400">1.6 m</span>
             </div>
             <input type="range" id="wing-chord" min="0.8" max="2.8" step="0.1" value="1.6" oninput="buildAircraft()" class="w-full">
           </div>
-
-          <div>
-            <div class="flex justify-between text-slate-300 mb-0.5">
-              <span>Flecha (Sweep):</span>
-              <span id="val-wing-sweep" class="font-mono text-sky-400">4°</span>
-            </div>
-            <input type="range" id="wing-sweep" min="-5" max="30" step="1" value="4" oninput="buildAircraft()" class="w-full">
-          </div>
-
           <div>
             <label class="text-slate-300 block mb-1">Posición del Ala:</label>
             <select id="wing-pos" onchange="buildAircraft()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-200">
-              <option value="high">Ala Alta (Estilo Cessna)</option>
-              <option value="mid">Ala Media (Acrobático / Militar)</option>
-              <option value="low" selected>Ala Baja (Estilo Piper / Bimotor)</option>
+              <option value="high">Ala Alta (Cessna)</option>
+              <option value="mid">Ala Media (Acrobático)</option>
+              <option value="low" selected>Ala Baja (Piper)</option>
             </select>
-          </div>
-
-          <div class="pt-2 border-t border-slate-700/60">
-            <span class="font-semibold text-slate-300 block mb-1">Estabilizadores</span>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <div class="flex justify-between text-[10px] text-slate-400 mb-0.5">
-                  <span>Horiz:</span>
-                  <span id="val-tail-h" class="font-mono text-sky-400">3.2m</span>
-                </div>
-                <input type="range" id="tail-h" min="1.5" max="5" step="0.2" value="3.2" oninput="buildAircraft()" class="w-full">
-              </div>
-              <div>
-                <div class="flex justify-between text-[10px] text-slate-400 mb-0.5">
-                  <span>Vert:</span>
-                  <span id="val-tail-v" class="font-mono text-sky-400">1.5m</span>
-                </div>
-                <input type="range" id="tail-v" min="0.8" max="2.8" step="0.1" value="1.5" oninput="buildAircraft()" class="w-full">
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -202,67 +156,41 @@
       <!-- ================= ETAPA 2: SISTEMAS ================= -->
       <div id="stage-systems" class="space-y-4 hidden">
         <div class="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded text-[11px] text-emerald-300">
-          <i class="fa-solid fa-circle-nodes mr-1"></i> Rutas mecánicas de control de vuelo y fluidos.
+          <i class="fa-solid fa-circle-nodes mr-1"></i> Rutas cinemáticas mecánicas diferenciadas por color.
         </div>
 
-        <!-- Mandos de Vuelo (Alerones, Flaps, Timones) -->
-        <div class="space-y-3">
+        <div class="space-y-2">
           <div class="flex items-center justify-between pb-1 border-b border-slate-700">
             <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Mandos de Vuelo</span>
             <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
-              <input type="checkbox" id="show-controls-sys" onchange="buildAircraft()" checked> Visible
+              <input type="checkbox" id="show-controls-sys" onchange="buildAircraft()" checked> Cables
             </label>
           </div>
-
-          <div class="space-y-2 text-[11px]">
-            <div class="flex items-center justify-between p-2 rounded bg-slate-900/80 border border-slate-800">
-              <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-cyan-400 inline-block shadow-sm shadow-cyan-400/50"></span>
-                <span class="text-slate-200">Línea de Alerones</span>
-              </div>
-              <span class="text-[10px] text-slate-400">Cabina &rarr; Extremo Alar</span>
+          <div class="p-2 rounded bg-slate-900/80 border border-slate-800 space-y-1.5 text-[11px]">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-cyan-400 inline-block"></span>
+              <span class="text-slate-200">Alerones (Cyan): Cabina &rarr; Puntas alares</span>
             </div>
-
-            <div class="flex items-center justify-between p-2 rounded bg-slate-900/80 border border-slate-800">
-              <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-amber-400 inline-block shadow-sm shadow-amber-400/50"></span>
-                <span class="text-slate-200">Línea de Flaps</span>
-              </div>
-              <span class="text-[10px] text-slate-400">Cabina &rarr; Borde Fuga Int.</span>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>
+              <span class="text-slate-200">Flaps (Amarillo): Cabina &rarr; Fuga interior</span>
             </div>
-
-            <div class="flex items-center justify-between p-2 rounded bg-slate-900/80 border border-slate-800">
-              <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-orange-500 inline-block shadow-sm shadow-orange-500/50"></span>
-                <span class="text-slate-200">Línea Timones de Cola</span>
-              </div>
-              <span class="text-[10px] text-slate-400">Pedales/Bastón &rarr; Deriva</span>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-orange-500 inline-block"></span>
+              <span class="text-slate-200">Timones (Naranja): Pedales &rarr; Cola</span>
             </div>
           </div>
         </div>
 
-        <!-- Combustible -->
         <div class="pt-2 border-t border-slate-700 space-y-2">
-          <div class="flex items-center justify-between pb-1 mb-1">
-            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Combustible (Fuel Tanks)</span>
-            <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
-              <input type="checkbox" id="show-tanks" onchange="buildAircraft()" checked> Depósitos
-            </label>
-          </div>
+          <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block">Combustible</span>
           <div>
-            <label class="text-slate-300 block mb-1">Disposición de tanques:</label>
+            <label class="text-slate-300 block mb-1">Tanques:</label>
             <select id="fuel-loc" onchange="buildAircraft()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-200">
               <option value="wings" selected>Alas (Wet Wings)</option>
               <option value="fuse">Fuselaje Central</option>
-              <option value="both">Alas + Depósito Central</option>
+              <option value="both">Alas + Central</option>
             </select>
-          </div>
-          <div>
-            <div class="flex justify-between text-slate-300 mb-0.5">
-              <span>Capacidad Total:</span>
-              <span id="val-fuel-cap" class="font-mono text-emerald-400">180 L</span>
-            </div>
-            <input type="range" id="fuel-cap" min="60" max="500" step="20" value="180" oninput="buildAircraft()" class="w-full">
           </div>
         </div>
       </div>
@@ -270,7 +198,7 @@
       <!-- ================= ETAPA 3: PLANTA DE PODER ================= -->
       <div id="stage-power" class="space-y-4 hidden">
         
-        <!-- Interruptor Maestro de Encendido -->
+        <!-- Interruptor Maestro -->
         <div class="p-3 bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl border border-amber-500/40 shadow-lg">
           <div class="flex items-center justify-between mb-2">
             <div>
@@ -279,49 +207,54 @@
             </div>
             <div id="engine-indicator-led" class="w-3.5 h-3.5 rounded-full bg-red-500 shadow-md shadow-red-500/50"></div>
           </div>
-          <button id="btn-engine-toggle" onclick="toggleEngine()" class="w-full py-2 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+          <button id="btn-engine-toggle" onclick="toggleEngine()" class="w-full py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition flex items-center justify-center gap-2">
             <i class="fa-solid fa-power-off"></i> <span>Encender Motor</span>
           </button>
         </div>
 
-        <div class="space-y-3">
-          <div class="flex items-center justify-between pb-1 border-b border-slate-700">
-            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Parámetros del Motor</span>
-            <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
-              <input type="checkbox" id="show-engine" onchange="buildAircraft()" checked> Visible
+        <!-- Ajustes de Visualización Mecánica Detallada -->
+        <div class="p-2.5 bg-slate-900/90 rounded-lg border border-slate-800 space-y-2">
+          <span class="font-semibold text-amber-400 block text-xs uppercase tracking-wider">Inspección Mecánica Interna</span>
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <label class="flex items-center gap-1.5 cursor-pointer text-slate-200">
+              <input type="checkbox" id="show-engine-block" onchange="buildAircraft()" checked> Cárter Exterior
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer text-slate-200">
+              <input type="checkbox" id="show-engine-internals" onchange="buildAircraft()" checked> Pistones / Bielas
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer text-slate-200">
+              <input type="checkbox" id="show-engine-valves" onchange="buildAircraft()" checked> Árbol / Válvulas
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer text-slate-200">
+              <input type="checkbox" id="transparent-crankcase" onchange="buildAircraft()" checked> Cárter Vidrio
             </label>
           </div>
-
-          <div>
-            <label class="text-slate-300 block mb-1">Tipo de Planta Motriz:</label>
-            <select id="engine-type" onchange="buildAircraft()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-200">
-              <option value="boxer" selected>Pistón Boxer (Lycoming O-320)</option>
-              <option value="radial">Motor Radial</option>
-              <option value="turboprop">Turbohélice Ligero</option>
-            </select>
-          </div>
-
-          <div>
-            <div class="flex justify-between text-slate-300 mb-0.5">
-              <span>Potencia:</span>
-              <span id="val-power-hp" class="font-mono text-amber-400">160 HP</span>
-            </div>
-            <input type="range" id="power-hp" min="80" max="450" step="10" value="160" oninput="buildAircraft()" class="w-full">
+          <div class="pt-1">
+            <button onclick="focusEngine()" class="w-full py-1.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-semibold">
+              <i class="fa-solid fa-magnifying-glass mr-1"></i> Enfocar Cámara en Motor
+            </button>
           </div>
         </div>
 
-        <div class="pt-2 border-t border-slate-700 space-y-2">
-          <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block mb-1">Hélice y Cono</span>
+        <div class="space-y-3">
+          <div>
+            <div class="flex justify-between text-slate-300 mb-0.5">
+              <span>Potencia Nominal:</span>
+              <span id="val-power-hp" class="font-mono text-amber-400">180 HP</span>
+            </div>
+            <input type="range" id="power-hp" min="100" max="320" step="10" value="180" oninput="buildAircraft()" class="w-full">
+          </div>
+
           <div>
             <div class="flex justify-between text-slate-300 mb-0.5">
               <span>Diámetro de Hélice:</span>
               <span id="val-prop-diam" class="font-mono text-amber-400">1.9 m</span>
             </div>
-            <input type="range" id="prop-diam" min="1.2" max="2.6" step="0.05" value="1.9" oninput="buildAircraft()" class="w-full">
+            <input type="range" id="prop-diam" min="1.4" max="2.4" step="0.05" value="1.9" oninput="buildAircraft()" class="w-full">
           </div>
 
           <div>
-            <label class="text-slate-300 block mb-1">Cantidad de Palas:</label>
+            <label class="text-slate-300 block mb-1">Palas:</label>
             <div class="grid grid-cols-3 gap-2">
               <button onclick="setPropBlades(2)" id="blade-btn-2" class="p-1.5 rounded bg-sky-600 text-white font-semibold">2 Palas</button>
               <button onclick="setPropBlades(3)" id="blade-btn-3" class="p-1.5 rounded bg-slate-800 text-slate-300">3 Palas</button>
@@ -332,12 +265,16 @@
 
         <div class="p-3 bg-slate-900/90 rounded-lg border border-amber-500/30 text-[11px] space-y-1 font-mono">
           <div class="flex justify-between">
-            <span class="text-slate-400">Tracción Estática Est.:</span>
-            <span id="calc-thrust" class="text-amber-400 font-bold">~328 kgf</span>
+            <span class="text-slate-400">Cilindrada:</span>
+            <span class="text-amber-400 font-bold">5.240 cc (320 cu in)</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-slate-400">Consumo al 75%:</span>
-            <span id="calc-burn" class="text-slate-200">35 L/h</span>
+            <span class="text-slate-400">Configuración:</span>
+            <span class="text-slate-200">Boxer 4 Cil. Opuestos</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Régimen Crucero:</span>
+            <span class="text-slate-200">2.450 RPM</span>
           </div>
         </div>
       </div>
@@ -355,59 +292,41 @@
     </div>
   </aside>
 
-  <!-- Telemetría Flotante -->
-  <aside class="absolute bottom-3 right-3 ui-panel rounded-xl p-3 w-64 sm:w-72 text-xs shadow-2xl border border-slate-700 hidden sm:block">
-    <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-700">
-      <span class="font-bold uppercase tracking-wider text-slate-300">Telemetría de Diseño</span>
-      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-    </div>
-    <div class="space-y-1.5 font-mono text-[11px]">
-      <div class="flex justify-between">
-        <span class="text-slate-400">Longitud Total:</span>
-        <span id="calc-fuse-total" class="text-sky-400 font-bold">8.2 m</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-slate-400">Superficie Alar:</span>
-        <span id="calc-wing-area" class="text-sky-400 font-bold">14.4 m²</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-slate-400">Aspect Ratio:</span>
-        <span id="calc-aspect-ratio" class="text-sky-400 font-bold">6.94</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-slate-400">Peso Vacío Est.:</span>
-        <span id="calc-weight-empty" class="text-slate-200">540 kg</span>
-      </div>
-    </div>
-  </aside>
-
   <script>
     // --- ESTADO GLOBAL ---
     let activeStage = 'struct';
     let renderStyle = 'xray';
     let propBladesCount = 2;
 
-    // Estado del motor y hélice
+    // Estado del motor y simulación mecánica
     let isEngineRunning = false;
-    let propRotationSpeed = 0;
-    let propAssembly = null; // Grupo que rotará en el render loop
+    let engineAngle = 0; // Ángulo del cigüeñal en radianes
+    let engineRPM = 0;
 
     let scene, camera, renderer;
     let planeGroup, structGroup, systemsGroup, powerGroup;
 
-    // Controles orbitales nativos
-    let isDragging = false;
+    // Referencias mecánicas para cinemática en animate()
+    let propAssembly = null;
+    let crankshaftMesh = null;
+    let camshaftMesh = null;
+    let pistonMeshes = []; // Array de { mesh, side, cylinderIndex, rodMesh, basePos }
+    let valveMeshes = [];
+
+    // --- CONTROLES DE CÁMARA (ÓRBITA + TRASLACIÓN/PAN NATIVOS) ---
+    let isOrbiting = false;
+    let isPanning = false;
     let lastMousePos = { x: 0, y: 0 };
     let spherical = { radius: 16, phi: Math.PI / 3, theta: Math.PI / 4 };
     let cameraTarget = new THREE.Vector3(0, 0, 0);
 
     window.addEventListener('DOMContentLoaded', () => {
-      initEngine();
+      initEngine3D();
       buildAircraft();
       animate();
     });
 
-    function initEngine() {
+    function initEngine3D() {
       const container = document.getElementById('canvas-container');
       const w = window.innerWidth;
       const h = window.innerHeight;
@@ -416,7 +335,7 @@
       scene.background = new THREE.Color(0x0b1120);
 
       camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
-      updateCameraPos();
+      updateCamera();
 
       renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
       renderer.setSize(w, h);
@@ -441,65 +360,120 @@
       planeGroup = new THREE.Group();
       scene.add(planeGroup);
 
-      initNativeControls(container);
+      initAdvancedControls(container);
       window.addEventListener('resize', onResize);
     }
 
-    function initNativeControls(el) {
+    // --- MANEJADOR DE MOUSE CON TRASLACIÓN LIBRE (PAN) ---
+    function initAdvancedControls(el) {
+      // Bloquear menú contextual de clic derecho para usarlo en paneo
+      el.addEventListener('contextmenu', (e) => e.preventDefault());
+
       el.addEventListener('mousedown', (e) => {
-        isDragging = true;
+        if (e.button === 0) {
+          isOrbiting = true;
+        } else if (e.button === 2) {
+          isPanning = true;
+        }
         lastMousePos = { x: e.clientX, y: e.clientY };
       });
 
       window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
         const dx = e.clientX - lastMousePos.x;
         const dy = e.clientY - lastMousePos.y;
-        spherical.theta -= dx * 0.007;
-        spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi - dy * 0.007));
-        updateCameraPos();
+
+        if (isOrbiting) {
+          // Rotación orbital
+          spherical.theta -= dx * 0.007;
+          spherical.phi = Math.max(0.08, Math.min(Math.PI - 0.08, spherical.phi - dy * 0.007));
+          updateCamera();
+        } else if (isPanning) {
+          // Traslación en el plano perpendicular a la vista de la cámara
+          const panSpeed = spherical.radius * 0.0015;
+          const forward = new THREE.Vector3().subVectors(cameraTarget, camera.position).normalize();
+          const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+          const up = new THREE.Vector3().crossVectors(right, forward).normalize();
+
+          cameraTarget.addScaledVector(right, -dx * panSpeed);
+          cameraTarget.addScaledVector(up, dy * panSpeed);
+          updateCamera();
+        }
+
         lastMousePos = { x: e.clientX, y: e.clientY };
       });
 
-      window.addEventListener('mouseup', () => { isDragging = false; });
+      window.addEventListener('mouseup', () => {
+        isOrbiting = false;
+        isPanning = false;
+      });
 
       el.addEventListener('wheel', (e) => {
         e.preventDefault();
-        spherical.radius = Math.max(4, Math.min(45, spherical.radius + e.deltaY * 0.015));
-        updateCameraPos();
+        spherical.radius = Math.max(1.2, Math.min(60, spherical.radius + e.deltaY * 0.015));
+        updateCamera();
       }, { passive: false });
 
-      // Touch móvil
-      let touchDist = 0;
+      // Soporte táctil móvil (1 dedo: orbitar, 2 dedos: paneo y zoom)
+      let touchStartDist = 0;
+      let lastTouchPos = { x: 0, y: 0 };
+
       el.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) {
-          isDragging = true;
-          lastMousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+          isOrbiting = true;
+          isPanning = false;
+          lastTouchPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         } else if (e.touches.length === 2) {
-          touchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+          isOrbiting = false;
+          isPanning = true;
+          touchStartDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+          lastTouchPos = {
+            x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+            y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+          };
         }
       });
 
       el.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 1 && isDragging) {
-          const dx = e.touches[0].clientX - lastMousePos.x;
-          const dy = e.touches[0].clientY - lastMousePos.y;
+        if (e.touches.length === 1 && isOrbiting) {
+          const dx = e.touches[0].clientX - lastTouchPos.x;
+          const dy = e.touches[0].clientY - lastTouchPos.y;
           spherical.theta -= dx * 0.007;
-          spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi - dy * 0.007));
-          updateCameraPos();
-          lastMousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        } else if (e.touches.length === 2) {
-          const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-          spherical.radius = Math.max(4, Math.min(45, spherical.radius + (touchDist - d) * 0.02));
-          updateCameraPos();
-          touchDist = d;
+          spherical.phi = Math.max(0.08, Math.min(Math.PI - 0.08, spherical.phi - dy * 0.007));
+          updateCamera();
+          lastTouchPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        } else if (e.touches.length === 2 && isPanning) {
+          const currentMid = {
+            x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+            y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+          };
+          const dx = currentMid.x - lastTouchPos.x;
+          const dy = currentMid.y - lastTouchPos.y;
+          const panSpeed = spherical.radius * 0.0018;
+
+          const forward = new THREE.Vector3().subVectors(cameraTarget, camera.position).normalize();
+          const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+          const up = new THREE.Vector3().crossVectors(right, forward).normalize();
+
+          cameraTarget.addScaledVector(right, -dx * panSpeed);
+          cameraTarget.addScaledVector(up, dy * panSpeed);
+
+          const currentDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+          const factor = (touchStartDist - currentDist) * 0.02;
+          spherical.radius = Math.max(1.2, Math.min(60, spherical.radius + factor));
+
+          updateCamera();
+          lastTouchPos = currentMid;
+          touchStartDist = currentDist;
         }
       });
 
-      el.addEventListener('touchend', () => { isDragging = false; });
+      el.addEventListener('touchend', () => {
+        isOrbiting = false;
+        isPanning = false;
+      });
     }
 
-    function updateCameraPos() {
+    function updateCamera() {
       camera.position.x = cameraTarget.x + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
       camera.position.y = cameraTarget.y + spherical.radius * Math.cos(spherical.phi);
       camera.position.z = cameraTarget.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
@@ -513,7 +487,20 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // --- INTERRUPTOR MOTOR ---
+    // --- BOTÓN DE ENFOQUE AL MOTOR ---
+    function focusEngine() {
+      const cabinLen = parseFloat(document.getElementById('cabin-len').value);
+      const noseLen = parseFloat(document.getElementById('nose-len').value);
+      const engineZ = (cabinLen / 2) + noseLen + 0.3;
+
+      // Centrar el objetivo exactamente en el bloque del motor
+      cameraTarget.set(0, 0, engineZ);
+      spherical.radius = 3.5; // Zoom cercano de inspección
+      spherical.phi = Math.PI / 2.8;
+      spherical.theta = Math.PI / 3;
+      updateCamera();
+    }
+
     function toggleEngine() {
       isEngineRunning = !isEngineRunning;
       const btn = document.getElementById('btn-engine-toggle');
@@ -522,13 +509,13 @@
 
       if (isEngineRunning) {
         btn.innerHTML = `<i class="fa-solid fa-power-off"></i> <span>Apagar Motor</span>`;
-        btn.className = "w-full py-2 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/30 transition flex items-center justify-center gap-2";
+        btn.className = "w-full py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/30 transition flex items-center justify-center gap-2";
         led.className = "w-3.5 h-3.5 rounded-full bg-emerald-400 shadow-md shadow-emerald-400/80 animate-pulse";
-        statusText.textContent = "EN MARCHA (~2400 RPM)";
+        statusText.textContent = "EN MARCHA (2450 RPM)";
         statusText.className = "text-[10px] text-emerald-400 font-mono font-bold";
       } else {
         btn.innerHTML = `<i class="fa-solid fa-power-off"></i> <span>Encender Motor</span>`;
-        btn.className = "w-full py-2 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition flex items-center justify-center gap-2";
+        btn.className = "w-full py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition flex items-center justify-center gap-2";
         led.className = "w-3.5 h-3.5 rounded-full bg-red-500 shadow-md shadow-red-500/50";
         statusText.textContent = "APAGADO / REPOSO";
         statusText.className = "text-[10px] text-slate-400 font-mono";
@@ -551,6 +538,10 @@
         }
       });
       highlightStageIn3D(stage);
+
+      if (stage === 'power') {
+        focusEngine();
+      }
     }
 
     function highlightStageIn3D(stage) {
@@ -565,7 +556,7 @@
       };
       if (stage === 'struct') { setOp(structGroup, 1.0); setOp(systemsGroup, 0.2); setOp(powerGroup, 0.3); }
       if (stage === 'systems') { setOp(structGroup, 0.18); setOp(systemsGroup, 1.0); setOp(powerGroup, 0.25); }
-      if (stage === 'power') { setOp(structGroup, 0.25); setOp(systemsGroup, 0.2); setOp(powerGroup, 1.0); }
+      if (stage === 'power') { setOp(structGroup, 0.22); setOp(systemsGroup, 0.15); setOp(powerGroup, 1.0); }
     }
 
     function setRenderStyle(style) {
@@ -592,40 +583,33 @@
       buildAircraft();
     }
 
-    // --- CONSTRUCCIÓN DEL MODELO 3D ---
+    // --- CONSTRUCCIÓN DEL MODELO 3D COMPLETO ---
     function buildAircraft() {
       if (!scene || !planeGroup) return;
 
-      // Parámetros de Secciones de Fuselaje
       const noseLen = parseFloat(document.getElementById('nose-len').value);
       const noseTaperPercent = parseFloat(document.getElementById('nose-taper').value) / 100;
       const cabinLen = parseFloat(document.getElementById('cabin-len').value);
       const fuseRadius = parseFloat(document.getElementById('fuse-width').value) / 2;
       const tailconeLen = parseFloat(document.getElementById('tailcone-len').value);
 
-      // Superficies
       const wingSpan = parseFloat(document.getElementById('wing-span').value);
       const wingChord = parseFloat(document.getElementById('wing-chord').value);
-      const wingSweep = (parseFloat(document.getElementById('wing-sweep').value) * Math.PI) / 180;
       const wingPos = document.getElementById('wing-pos').value;
-      const tailH = parseFloat(document.getElementById('tail-h').value);
-      const tailV = parseFloat(document.getElementById('tail-v').value);
 
       const showFrames = document.getElementById('show-frames').checked;
-      const showRibs = document.getElementById('show-ribs').checked;
       const showControlsSys = document.getElementById('show-controls-sys').checked;
       const showTanks = document.getElementById('show-tanks').checked;
       const fuelLoc = document.getElementById('fuel-loc').value;
 
-      const showEngine = document.getElementById('show-engine').checked;
-      const engineType = document.getElementById('engine-type').value;
-      const powerHp = parseFloat(document.getElementById('power-hp').value);
+      // Opciones de detalle mecánico del motor
+      const showEngineBlock = document.getElementById('show-engine-block').checked;
+      const showEngineInternals = document.getElementById('show-engine-internals').checked;
+      const showEngineValves = document.getElementById('show-engine-valves').checked;
+      const isCrankcaseTransparent = document.getElementById('transparent-crankcase').checked;
       const propDiam = parseFloat(document.getElementById('prop-diam').value);
 
-      // Totalización de longitud
-      const totalFuseLen = noseLen + cabinLen + tailconeLen;
-
-      // Actualizar valores de UI
+      // UI Texts
       document.getElementById('val-nose-len').textContent = noseLen.toFixed(1) + ' m';
       document.getElementById('val-nose-taper').textContent = document.getElementById('nose-taper').value + '%';
       document.getElementById('val-cabin-len').textContent = cabinLen.toFixed(1) + ' m';
@@ -633,27 +617,14 @@
       document.getElementById('val-tailcone-len').textContent = tailconeLen.toFixed(1) + ' m';
       document.getElementById('val-wing-span').textContent = wingSpan.toFixed(1) + ' m';
       document.getElementById('val-wing-chord').textContent = wingChord.toFixed(1) + ' m';
-      document.getElementById('val-wing-sweep').textContent = document.getElementById('wing-sweep').value + '°';
-      document.getElementById('val-tail-h').textContent = tailH.toFixed(1) + ' m';
-      document.getElementById('val-tail-v').textContent = tailV.toFixed(1) + ' m';
-      document.getElementById('val-power-hp').textContent = powerHp + ' HP';
       document.getElementById('val-prop-diam').textContent = propDiam.toFixed(2) + ' m';
 
-      const wingArea = wingSpan * (wingChord * 0.9);
-      const ar = (wingSpan * wingSpan) / wingArea;
-      const estEmptyWeight = Math.round(180 + (totalFuseLen * 36) + (wingArea * 12) + (powerHp * 0.85));
-
-      document.getElementById('calc-fuse-total').textContent = totalFuseLen.toFixed(1) + ' m';
-      document.getElementById('calc-wing-area').textContent = wingArea.toFixed(1) + ' m²';
-      document.getElementById('calc-aspect-ratio').textContent = ar.toFixed(2);
-      document.getElementById('calc-weight-empty').textContent = estEmptyWeight + ' kg';
-      document.getElementById('calc-thrust').textContent = `~${Math.round(powerHp * 2.05)} kgf`;
-      document.getElementById('calc-burn').textContent = `${Math.round(powerHp * 0.22)} L/h`;
-
-      // Limpiar grupos anteriores
+      // Reset
       while (planeGroup.children.length > 0) {
         planeGroup.remove(planeGroup.children[0]);
       }
+      pistonMeshes = [];
+      valveMeshes = [];
 
       structGroup = new THREE.Group();
       systemsGroup = new THREE.Group();
@@ -663,7 +634,6 @@
       planeGroup.add(systemsGroup);
       planeGroup.add(powerGroup);
 
-      // Fábrica de materiales
       function makeMat(color, op = 0.85) {
         const isWire = renderStyle === 'wire';
         const isXray = renderStyle === 'xray';
@@ -681,34 +651,27 @@
       }
 
       const skinMat = makeMat(0x94a3b8);
-      const cabinMat = makeMat(0x60a5fa, 0.5);
+      const cabinGlassMat = makeMat(0x60a5fa, 0.45);
       const wingMat = makeMat(0x38bdf8);
       const frameMat = new THREE.MeshBasicMaterial({ color: 0x0284c7, wireframe: true });
       const fuelMat = new THREE.MeshStandardMaterial({ color: 0x10b981, transparent: true, opacity: 0.75 });
-      const engineMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3, metalness: 0.7 });
-      const propMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+      const propMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 });
 
-      // ================= 1. ESTRUCTURA: FUSELAJE MODULAR =================
-      // Origen de referencia en el centro de la cabina (Z = 0)
-      
-      // 1A. Cabina / Fuselaje Central
+      // ================= 1. ESTRUCTURA =================
+      // Cabina
       const cabinGeo = new THREE.CylinderGeometry(fuseRadius, fuseRadius, cabinLen, 24);
       cabinGeo.rotateX(Math.PI / 2);
-      const cabinMesh = new THREE.Mesh(cabinGeo, skinMat);
-      cabinMesh.position.set(0, 0, 0);
-      structGroup.add(cabinMesh);
+      structGroup.add(new THREE.Mesh(cabinGeo, skinMat));
 
-      // Cúpula / Parabrisas cabina
       const canopyGeo = new THREE.CylinderGeometry(fuseRadius * 0.95, fuseRadius * 0.98, cabinLen * 0.5, 16, 1, false, 0, Math.PI);
       canopyGeo.rotateX(Math.PI / 2);
       canopyGeo.rotateZ(Math.PI);
-      const canopyMesh = new THREE.Mesh(canopyGeo, cabinMat);
-      canopyMesh.position.set(0, fuseRadius * 0.25, cabinLen * 0.15);
-      structGroup.add(canopyMesh);
+      const canopy = new THREE.Mesh(canopyGeo, cabinGlassMat);
+      canopy.position.set(0, fuseRadius * 0.25, cabinLen * 0.15);
+      structGroup.add(canopy);
 
-      // 1B. Morro / Sección Delantera (Hacia Z positivo, cerrando hacia adelante)
+      // Morro cerrando hacia adelante
       const noseTipRadius = fuseRadius * noseTaperPercent;
-      // Cilindro troncocónico: radio superior (punta delantera), radio inferior (empalme cabina)
       const noseGeo = new THREE.CylinderGeometry(noseTipRadius, fuseRadius, noseLen, 24);
       noseGeo.rotateX(Math.PI / 2);
       const noseMesh = new THREE.Mesh(noseGeo, skinMat);
@@ -716,209 +679,286 @@
       noseMesh.position.set(0, -fuseRadius * 0.08, noseCenterZ);
       structGroup.add(noseMesh);
 
-      // Cúpula o capó frontal curvo en la punta
-      const noseFrontZ = (cabinLen / 2) + noseLen;
-      const noseCapGeo = new THREE.SphereGeometry(noseTipRadius, 20, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-      noseCapGeo.rotateX(Math.PI / 2);
-      const noseCapMesh = new THREE.Mesh(noseCapGeo, skinMat);
-      noseCapMesh.position.set(0, -fuseRadius * 0.08, noseFrontZ);
-      structGroup.add(noseCapMesh);
-
-      // 1C. Cono de Cola / Tailcone (Hacia Z negativo, afilando hacia el empenaje)
-      const tailTipRadius = fuseRadius * 0.2;
-      const tailconeGeo = new THREE.CylinderGeometry(fuseRadius, tailTipRadius, tailconeLen, 24);
+      // Cono Cola
+      const tailconeGeo = new THREE.CylinderGeometry(fuseRadius, fuseRadius * 0.2, tailconeLen, 24);
       tailconeGeo.rotateX(Math.PI / 2);
       const tailconeMesh = new THREE.Mesh(tailconeGeo, skinMat);
-      const tailconeCenterZ = -(cabinLen / 2) - (tailconeLen / 2);
-      tailconeMesh.position.set(0, 0, tailconeCenterZ);
+      tailconeMesh.position.set(0, 0, -(cabinLen / 2) - (tailconeLen / 2));
       structGroup.add(tailconeMesh);
 
-      // Cuadernas estructurales
+      // Cuadernas
       if (showFrames) {
-        // Cuadernas en cabina
         for (let i = -1; i <= 1; i++) {
           const frame = new THREE.Mesh(new THREE.RingGeometry(fuseRadius * 0.35, fuseRadius * 0.96, 20), frameMat);
           frame.position.set(0, 0, i * (cabinLen * 0.35));
           structGroup.add(frame);
         }
-        // Cuadernas en cono de cola
-        for (let j = 1; j <= 3; j++) {
-          const ratio = j / 4;
-          const r = fuseRadius * (1 - ratio * 0.7);
-          const frameTail = new THREE.Mesh(new THREE.RingGeometry(r * 0.3, r * 0.95, 16), frameMat);
-          frameTail.position.set(0, 0, -(cabinLen / 2) - (tailconeLen * ratio));
-          structGroup.add(frameTail);
-        }
       }
 
-      // 1D. Alas y Superficies
+      // Alas
       let wingPosY = 0;
       if (wingPos === 'high') wingPosY = fuseRadius * 0.85;
       if (wingPos === 'low') wingPosY = -fuseRadius * 0.65;
-
       const semiSpan = wingSpan / 2;
-      [-1, 1].forEach(side => {
-        const wingBoxGeo = new THREE.BoxGeometry(semiSpan, 0.12, wingChord);
-        const wingMesh = new THREE.Mesh(wingBoxGeo, wingMat);
-        const wingCenterX = side * (semiSpan / 2);
-        const wingCenterZ = -Math.sin(wingSweep) * (semiSpan / 2);
-        wingMesh.position.set(wingCenterX, wingPosY, wingCenterZ);
-        wingMesh.rotation.y = side * wingSweep * 0.6;
-        structGroup.add(wingMesh);
 
-        // Costillas
-        if (showRibs) {
-          for (let r = 1; r <= 4; r++) {
-            const rx = side * (semiSpan * (r / 5));
-            const rib = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.16, wingChord * 0.95), frameMat);
-            rib.position.set(rx, wingPosY, -Math.sin(wingSweep) * Math.abs(rx));
-            structGroup.add(rib);
-          }
-        }
+      [-1, 1].forEach(side => {
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(semiSpan, 0.12, wingChord), wingMat);
+        wing.position.set(side * (semiSpan / 2), wingPosY, 0);
+        structGroup.add(wing);
       });
 
-      // Cola y timones
+      // Cola
       const tailZPos = -(cabinLen / 2) - tailconeLen;
-      const hTail = new THREE.Mesh(new THREE.BoxGeometry(tailH, 0.05, wingChord * 0.45), wingMat);
+      const hTail = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.05, 0.7), wingMat);
       hTail.position.set(0, fuseRadius * 0.25, tailZPos + 0.2);
       structGroup.add(hTail);
 
-      const vTail = new THREE.Mesh(new THREE.BoxGeometry(0.05, tailV, wingChord * 0.5), wingMat);
-      vTail.position.set(0, fuseRadius * 0.5 + tailV / 2, tailZPos + 0.1);
+      const vTail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.5, 0.8), wingMat);
+      vTail.position.set(0, fuseRadius * 0.5 + 0.75, tailZPos + 0.1);
       structGroup.add(vTail);
 
-
-      // ================= 2. SISTEMAS (MANDOS DE VUELO Y COMBUSTIBLE) =================
+      // ================= 2. SISTEMAS =================
       if (showControlsSys) {
-        // Pedestal / Palanca de mando en cabina
-        const stickMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        const controlStick = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8), stickMat);
-        controlStick.position.set(0, -0.1, 0.2);
-        systemsGroup.add(controlStick);
+        const aileronWireMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+        const flapWireMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+        const rudderWireMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
 
-        // Polea de distribución central
-        const pulleyMat = new THREE.MeshBasicMaterial({ color: 0x64748b });
-        const centralPulley = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.05, 12), pulleyMat);
-        centralPulley.position.set(0, wingPosY, 0);
-        systemsGroup.add(centralPulley);
-
-        // A. Cables de ALERONES (Cyan) -> Salen al 75% de la envergadura (extremos)
-        const aileronCableMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 }); // Cyan
         [-1, 1].forEach(side => {
-          const aileronX = side * (semiSpan * 0.72);
-          const aileronZ = -Math.sin(wingSweep) * Math.abs(aileronX) - (wingChord * 0.4);
-          
-          const aileronWireGeo = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(0, wingPosY, 0),
-            new THREE.Vector3(side * (semiSpan * 0.2), wingPosY, -wingChord * 0.1),
-            new THREE.Vector3(aileronX, wingPosY, aileronZ)
-          ]);
-          const aileronLine = new THREE.Line(aileronWireGeo, aileronCableMat);
+          // Alerón
+          const aileronLine = new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(0, wingPosY, 0),
+              new THREE.Vector3(side * (semiSpan * 0.72), wingPosY, -wingChord * 0.4)
+            ]),
+            aileronWireMat
+          );
           systemsGroup.add(aileronLine);
 
-          // Servomotor / Cuerno de mando de alerón
-          const horn = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.06), aileronCableMat);
-          horn.position.set(aileronX, wingPosY, aileronZ);
-          systemsGroup.add(horn);
-        });
-
-        // B. Cables de FLAPS (Amarillo) -> Salen al borde de fuga interior (cerca del fuselaje)
-        const flapCableMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 }); // Amarillo
-        [-1, 1].forEach(side => {
-          const flapX = side * (semiSpan * 0.28);
-          const flapZ = -Math.sin(wingSweep) * Math.abs(flapX) - (wingChord * 0.42);
-
-          const flapWireGeo = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(0, wingPosY - 0.05, 0),
-            new THREE.Vector3(flapX, wingPosY - 0.02, flapZ)
-          ]);
-          const flapLine = new THREE.Line(flapWireGeo, flapCableMat);
+          // Flap
+          const flapLine = new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(0, wingPosY - 0.05, 0),
+              new THREE.Vector3(side * (semiSpan * 0.28), wingPosY - 0.02, -wingChord * 0.42)
+            ]),
+            flapWireMat
+          );
           systemsGroup.add(flapLine);
-
-          // Actuador de flap
-          const flapActuator = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.08), flapCableMat);
-          flapActuator.position.set(flapX, wingPosY - 0.02, flapZ);
-          systemsGroup.add(flapActuator);
         });
 
-        // C. Transmisión a Timones de Cola (Naranja)
-        const rudderCableMat = new THREE.MeshBasicMaterial({ color: 0xf97316 }); // Naranja
-        const tailWireGeo = new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(0, -0.1, 0.1),
-          new THREE.Vector3(0, -0.05, tailZPos + 0.3)
-        ]);
-        systemsGroup.add(new THREE.Line(tailWireGeo, rudderCableMat));
+        // Timón
+        systemsGroup.add(new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(0, -0.1, 0.1),
+            new THREE.Vector3(0, -0.05, tailZPos + 0.3)
+          ]),
+          rudderWireMat
+        ));
       }
 
-      // Depósitos de combustible
-      if (showTanks) {
-        if (fuelLoc === 'wings' || fuelLoc === 'both') {
-          [-1, 1].forEach(side => {
-            const tank = new THREE.Mesh(new THREE.BoxGeometry(wingSpan * 0.22, 0.12, wingChord * 0.38), fuelMat);
-            tank.position.set(side * (wingSpan * 0.2), wingPosY, -wingChord * 0.15);
-            systemsGroup.add(tank);
+      if (showTanks && (fuelLoc === 'wings' || fuelLoc === 'both')) {
+        [-1, 1].forEach(side => {
+          const tank = new THREE.Mesh(new THREE.BoxGeometry(wingSpan * 0.22, 0.12, wingChord * 0.38), fuelMat);
+          tank.position.set(side * (wingSpan * 0.2), wingPosY, -wingChord * 0.15);
+          systemsGroup.add(tank);
+        });
+      }
+
+      // ================= 3. PLANTA DE PODER: MOTOR BOXER DETALLADO =================
+      const engineZ = (cabinLen / 2) + noseLen + 0.15;
+      const engineOrigin = new THREE.Group();
+      engineOrigin.position.set(0, -fuseRadius * 0.08, engineZ);
+      powerGroup.add(engineOrigin);
+
+      // Materiales mecánicos especializados
+      const steelMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.2 });
+      const pistonAlloyMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.15 });
+      const brassMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.8, roughness: 0.3 });
+      const crankcaseMat = new THREE.MeshStandardMaterial({
+        color: 0x334155,
+        transparent: isCrankcaseTransparent,
+        opacity: isCrankcaseTransparent ? 0.35 : 0.95,
+        roughness: 0.4,
+        metalness: 0.6,
+        wireframe: renderStyle === 'wire'
+      });
+      crankcaseMat.userData = { baseOpacity: isCrankcaseTransparent ? 0.35 : 0.95 };
+
+      // 3A. Cárter Central y Camisas de Cilindro
+      if (showEngineBlock) {
+        // Bloque central cárter
+        const crankcaseBox = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.36, 0.65), crankcaseMat);
+        engineOrigin.add(crankcaseBox);
+
+        // 4 Camisas de cilindros con aletas de refrigeración (2 por lado)
+        const cylinderOffsetsZ = [-0.15, 0.15];
+        [-1, 1].forEach(side => {
+          cylinderOffsetsZ.forEach((zPos, cIdx) => {
+            const cylinderGroup = new THREE.Group();
+            cylinderGroup.position.set(side * 0.28, 0, zPos);
+            cylinderGroup.rotation.z = side * Math.PI / 2;
+
+            // Camisa principal
+            const sleeveGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.32, 16);
+            cylinderGroup.add(new THREE.Mesh(sleeveGeo, crankcaseMat));
+
+            // Aletas de refrigeración externa
+            for (let f = -0.12; f <= 0.12; f += 0.04) {
+              const fin = new THREE.Mesh(new THREE.RingGeometry(0.11, 0.16, 16), steelMat);
+              fin.rotation.x = Math.PI / 2;
+              fin.position.y = f;
+              cylinderGroup.add(fin);
+            }
+
+            // Culata de cilindro (Cylinder head)
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.08, 0.22), steelMat);
+            head.position.y = 0.18;
+            cylinderGroup.add(head);
+
+            // Bujía con cable
+            const sparkPlug = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.08, 8), brassMat);
+            sparkPlug.position.set(0, 0.24, 0);
+            cylinderGroup.add(sparkPlug);
+
+            engineOrigin.add(cylinderGroup);
           });
-        }
-        if (fuelLoc === 'fuse' || fuelLoc === 'both') {
-          const fuseTank = new THREE.Mesh(new THREE.CylinderGeometry(fuseRadius * 0.5, fuseRadius * 0.5, cabinLen * 0.35, 12), fuelMat);
-          fuseTank.rotateX(Math.PI / 2);
-          fuseTank.position.set(0, -fuseRadius * 0.3, -cabinLen * 0.15);
-          systemsGroup.add(fuseTank);
-        }
+        });
       }
 
-      // ================= 3. PLANTA DE PODER =================
-      if (showEngine) {
-        const engineMountZ = noseFrontZ;
+      // 3B. Cigüeñal Longitudinal Central
+      crankshaftMesh = new THREE.Group();
+      // Eje principal
+      const crankShaftMain = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.72, 16), steelMat);
+      crankShaftMain.rotateX(Math.PI / 2);
+      crankshaftMesh.add(crankShaftMain);
 
-        // Bloque motor
-        let engGeo = new THREE.BoxGeometry(fuseRadius * 1.1, fuseRadius * 0.6, 0.5);
-        if (engineType === 'radial') {
-          engGeo = new THREE.CylinderGeometry(fuseRadius * 0.75, fuseRadius * 0.75, 0.35, 14);
-          engGeo.rotateX(Math.PI / 2);
-        } else if (engineType === 'turboprop') {
-          engGeo = new THREE.CylinderGeometry(fuseRadius * 0.35, fuseRadius * 0.55, 0.8, 14);
-          engGeo.rotateX(Math.PI / 2);
-        }
-        const engineMesh = new THREE.Mesh(engGeo, engineMat);
-        engineMesh.position.set(0, -fuseRadius * 0.08, engineMountZ + 0.2);
-        powerGroup.add(engineMesh);
+      // Brazos / Muñequillas acodadas del cigüeñal
+      const crankOffsetsZ = [-0.2, -0.07, 0.07, 0.2];
+      crankOffsetsZ.forEach((cz, i) => {
+        const crankWeb = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.03), steelMat);
+        crankWeb.position.set(0, (i % 2 === 0 ? 0.05 : -0.05), cz);
+        crankshaftMesh.add(crankWeb);
+      });
+      engineOrigin.add(crankshaftMesh);
 
-        // Subgrupo rotatorio de la hélice
-        propAssembly = new THREE.Group();
-        propAssembly.position.set(0, -fuseRadius * 0.08, engineMountZ + 0.45);
+      // 3C. Pistones y Bielas Móviles
+      if (showEngineInternals) {
+        const stroke = 0.09; // Radio de manivela (mitad de carrera)
+        const rodLength = 0.22; // Longitud de la biela
 
-        // Cono spinner delantero
-        const spinner = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.38, 18), engineMat);
-        spinner.rotateX(Math.PI / 2);
-        spinner.position.set(0, 0, 0.18);
-        propAssembly.add(spinner);
+        // 4 Pistones: 2 izquierda (side = -1), 2 derecha (side = 1)
+        const pistonConfigs = [
+          { side: -1, z: -0.15, phase: 0 },
+          { side: 1, z: -0.15, phase: Math.PI },
+          { side: -1, z: 0.15, phase: Math.PI },
+          { side: 1, z: 0.15, phase: 0 }
+        ];
 
-        // Palas montadas en el conjunto rotatorio
-        const bladeLen = propDiam / 2;
-        for (let b = 0; b < propBladesCount; b++) {
-          const angle = (b * (2 * Math.PI)) / propBladesCount;
-          const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, bladeLen, 0.02), propMat);
-          blade.position.set((Math.sin(angle) * bladeLen) / 2, (Math.cos(angle) * bladeLen) / 2, 0);
-          blade.rotation.z = -angle;
-          propAssembly.add(blade);
-        }
+        pistonConfigs.forEach(cfg => {
+          // Grupo del Pistón
+          const pGroup = new THREE.Group();
+          
+          // Cabeza del pistón
+          const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.095, 0.12, 16), pistonAlloyMat);
+          crown.rotation.z = cfg.side * Math.PI / 2;
+          pGroup.add(crown);
 
-        powerGroup.add(propAssembly);
-      } else {
-        propAssembly = null;
+          // Ranuras de aros de compresión
+          for (let r = -0.03; r <= 0.03; r += 0.03) {
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(0.096, 0.004, 6, 16), brassMat);
+            ring.rotation.y = Math.PI / 2;
+            ring.position.x = cfg.side * r;
+            pGroup.add(ring);
+          }
+
+          // Biela articulada (Connecting rod)
+          const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, rodLength, 8), steelMat);
+          rod.position.x = -cfg.side * (rodLength / 2);
+          rod.rotation.z = cfg.side * Math.PI / 2;
+          pGroup.add(rod);
+
+          engineOrigin.add(pGroup);
+
+          pistonMeshes.push({
+            group: pGroup,
+            rod: rod,
+            side: cfg.side,
+            z: cfg.z,
+            phase: cfg.phase,
+            baseX: cfg.side * 0.24,
+            stroke: stroke,
+            rodLen: rodLength
+          });
+        });
       }
+
+      // 3D. Árbol de Levas y Válvulas
+      if (showEngineValves) {
+        camshaftMesh = new THREE.Group();
+        camshaftMesh.position.set(0, -0.14, 0); // Ubicado debajo del cigüeñal
+
+        const camShaftBar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.65, 12), steelMat);
+        camShaftBar.rotateX(Math.PI / 2);
+        camshaftMesh.add(camShaftBar);
+
+        // Levas excéntricas
+        for (let l = -0.22; l <= 0.22; l += 0.07) {
+          const camLob = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.025, 12), steelMat);
+          camLob.rotateX(Math.PI / 2);
+          camLob.position.set(0, 0.015, l);
+          camshaftMesh.add(camLob);
+        }
+        engineOrigin.add(camshaftMesh);
+
+        // Válvulas en las culatas (Admisión y Escape por cilindro)
+        [-1, 1].forEach(side => {
+          [-0.18, -0.12, 0.12, 0.18].forEach(zv => {
+            const valveGroup = new THREE.Group();
+            valveGroup.position.set(side * 0.44, 0.06, zv);
+
+            // Vástago y resorte
+            const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.09, 8), steelMat);
+            stem.rotation.z = side * Math.PI / 2;
+            valveGroup.add(stem);
+
+            const spring = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.05, 8), brassMat);
+            spring.rotation.z = side * Math.PI / 2;
+            valveGroup.add(spring);
+
+            engineOrigin.add(valveGroup);
+            valveMeshes.push({ group: valveGroup, baseX: side * 0.44, side: side });
+          });
+        });
+      }
+
+      // 3E. Conjunto Hélice y Spinner
+      propAssembly = new THREE.Group();
+      propAssembly.position.set(0, 0, 0.42);
+
+      const spinner = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.35, 18), steelMat);
+      spinner.rotateX(Math.PI / 2);
+      spinner.position.set(0, 0, 0.15);
+      propAssembly.add(spinner);
+
+      const bladeLen = propDiam / 2;
+      for (let b = 0; b < propBladesCount; b++) {
+        const angle = (b * (2 * Math.PI)) / propBladesCount;
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, bladeLen, 0.02), propMat);
+        blade.position.set((Math.sin(angle) * bladeLen) / 2, (Math.cos(angle) * bladeLen) / 2, 0);
+        blade.rotation.z = -angle;
+        propAssembly.add(blade);
+      }
+      engineOrigin.add(propAssembly);
 
       highlightStageIn3D(activeStage);
     }
 
-    // --- CÁMARAS PREDEFINIDAS ---
     function setCameraView(view) {
+      cameraTarget.set(0, 0, 0);
       if (view === 'iso') { spherical.radius = 16; spherical.phi = Math.PI / 3; spherical.theta = Math.PI / 4; }
       if (view === 'top') { spherical.radius = 18; spherical.phi = 0.05; spherical.theta = 0; }
       if (view === 'side') { spherical.radius = 18; spherical.phi = Math.PI / 2; spherical.theta = Math.PI / 2; }
       if (view === 'front') { spherical.radius = 18; spherical.phi = Math.PI / 2; spherical.theta = 0; }
-      updateCameraPos();
+      updateCamera();
     }
 
     function takeScreenshot() {
@@ -930,22 +970,45 @@
       a.click();
     }
 
-    // --- BUCLE DE RENDERIZADO Y SIMULACIÓN DE MOTOR ---
+    // --- BUCLE DE ANIMACIÓN Y CINEMÁTICA MECÁNICA EN DIRECTO ---
     function animate() {
       requestAnimationFrame(animate);
 
-      // Simulación física de aceleración / frenado de hélice
+      // Simulación física de revoluciones
       if (isEngineRunning) {
-        // Acelera progresivamente hasta alcanzar velocidad crucero
-        propRotationSpeed = Math.min(0.45, propRotationSpeed + 0.015);
+        engineRPM = Math.min(0.48, engineRPM + 0.015);
       } else {
-        // Frena con resistencia aerodinámica por inercia
-        propRotationSpeed = Math.max(0, propRotationSpeed - 0.008);
+        engineRPM = Math.max(0, engineRPM - 0.008);
       }
 
-      // Aplicar giro continuo al conjunto de hélice
-      if (propAssembly && propRotationSpeed > 0) {
-        propAssembly.rotation.z += propRotationSpeed;
+      if (engineRPM > 0) {
+        engineAngle += engineRPM;
+
+        // 1. Giro del cigüeñal y hélice
+        if (crankshaftMesh) crankshaftMesh.rotation.z = engineAngle;
+        if (propAssembly) propAssembly.rotation.z = engineAngle;
+
+        // 2. Giro del árbol de levas (a la mitad de velocidad que el cigüeñal: relación 1:2 de 4 tiempos)
+        if (camshaftMesh) camshaftMesh.rotation.z = engineAngle * 0.5;
+
+        // 3. Cinemática recíproca de pistones y bielas en tiempo real:
+        // x(t) = r * cos(theta + phase)
+        pistonMeshes.forEach(p => {
+          const displacement = Math.cos(engineAngle + p.phase) * p.stroke;
+          p.group.position.x = p.baseX + (p.side * displacement);
+          p.group.position.z = p.z;
+
+          // Oscilación angular de la biela
+          if (p.rod) {
+            p.rod.rotation.z = (p.side * Math.PI / 2) + Math.sin(engineAngle + p.phase) * 0.22;
+          }
+        });
+
+        // 4. Apertura y cierre de válvulas
+        valveMeshes.forEach((v, idx) => {
+          const valveLift = Math.max(0, Math.sin((engineAngle * 0.5) + idx * 1.5)) * 0.025;
+          v.group.position.x = v.baseX + (v.side * valveLift);
+        });
       }
 
       if (renderer && scene && camera) {
