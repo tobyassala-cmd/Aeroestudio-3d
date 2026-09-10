@@ -22,10 +22,10 @@
 </head>
 <body>
 
-  <!-- Contenedor 3D Three.js -->
+  <!-- Contenedor 3D -->
   <div id="canvas-container"></div>
 
-  <!-- Encabezado Superior -->
+  <!-- Barra Superior -->
   <header class="absolute top-0 left-0 right-0 p-3 sm:p-4 ui-panel border-b flex justify-between items-center">
     <div class="flex items-center space-x-3">
       <div class="w-9 h-9 rounded-lg bg-sky-600 flex items-center justify-center text-white shadow-lg shadow-sky-600/30">
@@ -33,7 +33,7 @@
       </div>
       <div>
         <h1 class="font-bold text-base sm:text-lg tracking-wide text-slate-100 flex items-center gap-2">
-          AeroStudio 3D <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">v4.1 Operativo</span>
+          AeroStudio 3D <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">v4.2 Render OK</span>
         </h1>
         <p class="text-[11px] text-slate-400 hidden sm:block">Clic Izq: Orbitar | Clic Der: Trasladar (Pan) | Rueda: Zoom</p>
       </div>
@@ -213,7 +213,7 @@
           </button>
         </div>
 
-        <!-- Ajustes de Visualización Mecánica Detallada -->
+        <!-- Inspección Interna -->
         <div class="p-2.5 bg-slate-900/90 rounded-lg border border-slate-800 space-y-2">
           <span class="font-semibold text-amber-400 block text-xs uppercase tracking-wider">Inspección Mecánica Interna</span>
           <div class="grid grid-cols-2 gap-2 text-[11px]">
@@ -263,21 +263,6 @@
             </div>
           </div>
         </div>
-
-        <div class="p-3 bg-slate-900/90 rounded-lg border border-amber-500/30 text-[11px] space-y-1 font-mono">
-          <div class="flex justify-between">
-            <span class="text-slate-400">Cilindrada:</span>
-            <span class="text-amber-400 font-bold">5.240 cc (320 cu in)</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-400">Configuración:</span>
-            <span class="text-slate-200">Boxer 4 Cil. Opuestos</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-slate-400">Régimen Crucero:</span>
-            <span class="text-slate-200">2.450 RPM</span>
-          </div>
-        </div>
       </div>
 
     </div>
@@ -299,7 +284,6 @@
     let renderStyle = 'xray';
     let propBladesCount = 2;
 
-    // Estado del motor
     let isEngineRunning = false;
     let engineAngle = 0;
     let engineRPM = 0;
@@ -313,17 +297,23 @@
     let pistonMeshes = [];
     let valveMeshes = [];
 
-    // Cámara (Órbita + Pan)
+    // Cámara euclidiana esférica protegida contra NaN
     let isOrbiting = false;
     let isPanning = false;
     let lastMousePos = { x: 0, y: 0 };
-    let spherical = { radius: 16, phi: Math.PI / 3, theta: Math.PI / 4 };
+    let cameraRadius = 15;
+    let cameraAzimuth = Math.PI / 4;   // rotación horizontal (theta)
+    let cameraElevation = 0.55;       // elevación vertical segura (~31 grados)
     let cameraTarget = new THREE.Vector3(0, 0, 0);
 
     window.addEventListener('DOMContentLoaded', () => {
-      initEngine3D();
-      buildAircraft();
-      animate();
+      try {
+        initEngine3D();
+        buildAircraft();
+        animate();
+      } catch (err) {
+        console.error("Error al iniciar AeroStudio:", err);
+      }
     });
 
     function initEngine3D() {
@@ -335,21 +325,21 @@
       scene.background = new THREE.Color(0x0b1120);
 
       camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
-      updateCamera();
+      updateCameraSafe();
 
-      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: false });
       renderer.setSize(w, h);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       container.appendChild(renderer.domElement);
 
-      const amb = new THREE.AmbientLight(0xffffff, 0.85);
+      const amb = new THREE.AmbientLight(0xffffff, 0.9);
       scene.add(amb);
 
       const sun = new THREE.DirectionalLight(0xffffff, 1.2);
       sun.position.set(15, 25, 20);
       scene.add(sun);
 
-      const fill = new THREE.DirectionalLight(0x38bdf8, 0.5);
+      const fill = new THREE.DirectionalLight(0x38bdf8, 0.6);
       fill.position.set(-15, -10, -15);
       scene.add(fill);
 
@@ -360,11 +350,25 @@
       planeGroup = new THREE.Group();
       scene.add(planeGroup);
 
-      initAdvancedControls(container);
+      initControls(container);
       window.addEventListener('resize', onResize);
     }
 
-    function initAdvancedControls(el) {
+    function updateCameraSafe() {
+      // Clampear elevación para evitar polos matemáticos singulares (NaN)
+      cameraElevation = Math.max(-1.45, Math.min(1.45, cameraElevation));
+      cameraRadius = Math.max(1.5, Math.min(70, cameraRadius));
+
+      const cx = cameraTarget.x + cameraRadius * Math.cos(cameraElevation) * Math.sin(cameraAzimuth);
+      const cy = cameraTarget.y + cameraRadius * Math.sin(cameraElevation);
+      const cz = cameraTarget.z + cameraRadius * Math.cos(cameraElevation) * Math.cos(cameraAzimuth);
+
+      camera.position.set(cx, cy, cz);
+      camera.lookAt(cameraTarget);
+      camera.updateProjectionMatrix();
+    }
+
+    function initControls(el) {
       el.addEventListener('contextmenu', (e) => e.preventDefault());
 
       el.addEventListener('mousedown', (e) => {
@@ -378,18 +382,18 @@
         const dy = e.clientY - lastMousePos.y;
 
         if (isOrbiting) {
-          spherical.theta -= dx * 0.007;
-          spherical.phi = Math.max(0.08, Math.min(Math.PI - 0.08, spherical.phi - dy * 0.007));
-          updateCamera();
+          cameraAzimuth -= dx * 0.008;
+          cameraElevation += dy * 0.008;
+          updateCameraSafe();
         } else if (isPanning) {
-          const panSpeed = spherical.radius * 0.0015;
+          const panSpeed = cameraRadius * 0.0015;
           const forward = new THREE.Vector3().subVectors(cameraTarget, camera.position).normalize();
-          const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+          const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
           const up = new THREE.Vector3().crossVectors(right, forward).normalize();
 
           cameraTarget.addScaledVector(right, -dx * panSpeed);
           cameraTarget.addScaledVector(up, dy * panSpeed);
-          updateCamera();
+          updateCameraSafe();
         }
 
         lastMousePos = { x: e.clientX, y: e.clientY };
@@ -402,8 +406,8 @@
 
       el.addEventListener('wheel', (e) => {
         e.preventDefault();
-        spherical.radius = Math.max(1.2, Math.min(60, spherical.radius + e.deltaY * 0.015));
-        updateCamera();
+        cameraRadius += e.deltaY * 0.015;
+        updateCameraSafe();
       }, { passive: false });
 
       // Touch móvil
@@ -430,9 +434,9 @@
         if (e.touches.length === 1 && isOrbiting) {
           const dx = e.touches[0].clientX - lastTouchPos.x;
           const dy = e.touches[0].clientY - lastTouchPos.y;
-          spherical.theta -= dx * 0.007;
-          spherical.phi = Math.max(0.08, Math.min(Math.PI - 0.08, spherical.phi - dy * 0.007));
-          updateCamera();
+          cameraAzimuth -= dx * 0.008;
+          cameraElevation += dy * 0.008;
+          updateCameraSafe();
           lastTouchPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         } else if (e.touches.length === 2 && isPanning) {
           const currentMid = {
@@ -441,20 +445,19 @@
           };
           const dx = currentMid.x - lastTouchPos.x;
           const dy = currentMid.y - lastTouchPos.y;
-          const panSpeed = spherical.radius * 0.0018;
+          const panSpeed = cameraRadius * 0.0018;
 
           const forward = new THREE.Vector3().subVectors(cameraTarget, camera.position).normalize();
-          const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+          const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
           const up = new THREE.Vector3().crossVectors(right, forward).normalize();
 
           cameraTarget.addScaledVector(right, -dx * panSpeed);
           cameraTarget.addScaledVector(up, dy * panSpeed);
 
           const currentDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-          const factor = (touchStartDist - currentDist) * 0.02;
-          spherical.radius = Math.max(1.2, Math.min(60, spherical.radius + factor));
+          cameraRadius -= (currentDist - touchStartDist) * 0.02;
 
-          updateCamera();
+          updateCameraSafe();
           lastTouchPos = currentMid;
           touchStartDist = currentDist;
         }
@@ -464,13 +467,6 @@
         isOrbiting = false;
         isPanning = false;
       });
-    }
-
-    function updateCamera() {
-      camera.position.x = cameraTarget.x + spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
-      camera.position.y = cameraTarget.y + spherical.radius * Math.cos(spherical.phi);
-      camera.position.z = cameraTarget.z + spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
-      camera.lookAt(cameraTarget);
     }
 
     function onResize() {
@@ -483,13 +479,31 @@
     function focusEngine() {
       const cabinLen = parseFloat(document.getElementById('cabin-len').value);
       const noseLen = parseFloat(document.getElementById('nose-len').value);
-      const engineZ = (cabinLen / 2) + noseLen + 0.3;
+      const engineZ = (cabinLen / 2) + noseLen + 0.25;
 
       cameraTarget.set(0, 0, engineZ);
-      spherical.radius = 3.5;
-      spherical.phi = Math.PI / 2.8;
-      spherical.theta = Math.PI / 3;
-      updateCamera();
+      cameraRadius = 3.6;
+      cameraElevation = 0.45;
+      cameraAzimuth = 0.85;
+      updateCameraSafe();
+    }
+
+    function setCameraView(view) {
+      cameraTarget.set(0, 0, 0);
+      if (view === 'iso') {
+        cameraRadius = 15;
+        cameraAzimuth = Math.PI / 4;
+        cameraElevation = 0.55;
+      } else if (view === 'top') {
+        cameraRadius = 16;
+        cameraAzimuth = 0;
+        cameraElevation = 1.44; // casi 90 grados sin singularidad
+      } else if (view === 'side') {
+        cameraRadius = 16;
+        cameraAzimuth = Math.PI / 2;
+        cameraElevation = 0.05;
+      }
+      updateCameraSafe();
     }
 
     function toggleEngine() {
@@ -574,7 +588,7 @@
       buildAircraft();
     }
 
-    // --- CONSTRUCTOR ROBUSTO DEL MODELO ---
+    // --- CONSTRUCTOR GEOMÉTRICO 3D ---
     function buildAircraft() {
       if (!scene || !planeGroup) return;
 
@@ -600,7 +614,6 @@
       const propDiam = parseFloat(document.getElementById('prop-diam').value);
       const powerHp = parseFloat(document.getElementById('power-hp').value);
 
-      // Actualizar de forma segura textos que existan
       const setTxt = (id, txt) => {
         const el = document.getElementById(id);
         if (el) el.textContent = txt;
@@ -616,7 +629,6 @@
       setTxt('val-prop-diam', propDiam.toFixed(2) + ' m');
       setTxt('val-power-hp', powerHp + ' HP');
 
-      // Limpieza segura
       while (planeGroup.children.length > 0) {
         planeGroup.remove(planeGroup.children[0]);
       }
@@ -751,7 +763,7 @@
         });
       }
 
-      // 3. PLANTA DE PODER (BOXER CINEMÁTICO)
+      // 3. MOTOR BOXER DETALLADO
       const engineZ = (cabinLen / 2) + noseLen + 0.15;
       const engineOrigin = new THREE.Group();
       engineOrigin.position.set(0, -fuseRadius * 0.08, engineZ);
@@ -916,14 +928,6 @@
       highlightStageIn3D(activeStage);
     }
 
-    function setCameraView(view) {
-      cameraTarget.set(0, 0, 0);
-      if (view === 'iso') { spherical.radius = 16; spherical.phi = Math.PI / 3; spherical.theta = Math.PI / 4; }
-      if (view === 'top') { spherical.radius = 18; spherical.phi = 0.05; spherical.theta = 0; }
-      if (view === 'side') { spherical.radius = 18; spherical.phi = Math.PI / 2; spherical.theta = Math.PI / 2; }
-      updateCamera();
-    }
-
     function takeScreenshot() {
       if (!renderer || !scene || !camera) return;
       renderer.render(scene, camera);
@@ -933,6 +937,7 @@
       a.click();
     }
 
+    // --- BUCLE DE RENDERIZADO Y CINEMÁTICA ---
     function animate() {
       requestAnimationFrame(animate);
 
