@@ -14,6 +14,7 @@
     #canvas-container:active { cursor: grabbing; }
     .ui-panel { z-index: 20; backdrop-filter: blur(14px); background-color: rgba(15, 23, 42, 0.93); border: 1px solid rgba(51, 65, 85, 0.65); }
     .tab-btn.active { background-color: #0284c7 !important; color: #ffffff !important; border-color: #38bdf8 !important; }
+    .view-btn.active { background-color: #0284c7 !important; color: #ffffff !important; font-weight: 600; }
     input[type=range] { accent-color: #38bdf8; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
@@ -22,7 +23,7 @@
 </head>
 <body>
 
-  <!-- Contenedor 3D -->
+  <!-- Contenedor 3D Three.js -->
   <div id="canvas-container"></div>
 
   <!-- Barra Superior -->
@@ -33,19 +34,19 @@
       </div>
       <div>
         <h1 class="font-bold text-base sm:text-lg tracking-wide text-slate-100 flex items-center gap-2">
-          AeroStudio 3D <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">v4.2 Render OK</span>
+          AeroStudio 3D <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">v4.3 Activo</span>
         </h1>
         <p class="text-[11px] text-slate-400 hidden sm:block">Clic Izq: Orbitar | Clic Der: Trasladar (Pan) | Rueda: Zoom</p>
       </div>
     </div>
 
-    <!-- Modos de Cámara y Enfoques -->
+    <!-- Modos de Cámara y Enfoques con estados activos -->
     <div class="flex items-center space-x-2">
       <div class="flex bg-slate-800 p-1 rounded-lg border border-slate-700 text-xs">
-        <button onclick="setCameraView('iso')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Avión</button>
-        <button onclick="focusEngine()" class="px-2.5 py-1 rounded hover:bg-sky-600/80 bg-sky-950/60 text-sky-300 font-semibold border border-sky-600/50">Foco Motor</button>
-        <button onclick="setCameraView('top')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Planta</button>
-        <button onclick="setCameraView('side')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Perfil</button>
+        <button id="cam-btn-iso" onclick="setCameraView('iso')" class="view-btn active px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Avión</button>
+        <button id="cam-btn-engine" onclick="focusEngine()" class="view-btn px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Foco Motor</button>
+        <button id="cam-btn-top" onclick="setCameraView('top')" class="view-btn px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Planta</button>
+        <button id="cam-btn-side" onclick="setCameraView('side')" class="view-btn px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Perfil</button>
       </div>
       <button onclick="takeScreenshot()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 transition">
         <i class="fa-solid fa-camera mr-1"></i> Captura
@@ -297,23 +298,19 @@
     let pistonMeshes = [];
     let valveMeshes = [];
 
-    // Cámara euclidiana esférica protegida contra NaN
+    // Cámara euclidiana esférica
     let isOrbiting = false;
     let isPanning = false;
     let lastMousePos = { x: 0, y: 0 };
     let cameraRadius = 15;
-    let cameraAzimuth = Math.PI / 4;   // rotación horizontal (theta)
-    let cameraElevation = 0.55;       // elevación vertical segura (~31 grados)
+    let cameraAzimuth = Math.PI / 4;
+    let cameraElevation = 0.55;
     let cameraTarget = new THREE.Vector3(0, 0, 0);
 
     window.addEventListener('DOMContentLoaded', () => {
-      try {
-        initEngine3D();
-        buildAircraft();
-        animate();
-      } catch (err) {
-        console.error("Error al iniciar AeroStudio:", err);
-      }
+      initEngine3D();
+      buildAircraft();
+      animate();
     });
 
     function initEngine3D() {
@@ -327,7 +324,7 @@
       camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000);
       updateCameraSafe();
 
-      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: false });
+      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
       renderer.setSize(w, h);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       container.appendChild(renderer.domElement);
@@ -355,7 +352,6 @@
     }
 
     function updateCameraSafe() {
-      // Clampear elevación para evitar polos matemáticos singulares (NaN)
       cameraElevation = Math.max(-1.45, Math.min(1.45, cameraElevation));
       cameraRadius = Math.max(1.5, Math.min(70, cameraRadius));
 
@@ -366,6 +362,54 @@
       camera.position.set(cx, cy, cz);
       camera.lookAt(cameraTarget);
       camera.updateProjectionMatrix();
+    }
+
+    function setActiveCamButton(id) {
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.remove('bg-sky-600');
+        btn.classList.add('text-slate-200');
+      });
+      const activeBtn = document.getElementById(id);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+      }
+    }
+
+    function setCameraView(view) {
+      cameraTarget.set(0, 0, 0);
+      if (view === 'iso') {
+        cameraRadius = 15;
+        cameraAzimuth = Math.PI / 4;
+        cameraElevation = 0.55;
+        setActiveCamButton('cam-btn-iso');
+      } else if (view === 'top') {
+        cameraRadius = 16;
+        cameraAzimuth = 0;
+        cameraElevation = 1.44;
+        setActiveCamButton('cam-btn-top');
+      } else if (view === 'side') {
+        cameraRadius = 16;
+        cameraAzimuth = Math.PI / 2;
+        cameraElevation = 0.05;
+        setActiveCamButton('cam-btn-side');
+      }
+      updateCameraSafe();
+    }
+
+    function focusEngine() {
+      const cabinLenInput = document.getElementById('cabin-len');
+      const noseLenInput = document.getElementById('nose-len');
+      const cabinLen = cabinLenInput ? parseFloat(cabinLenInput.value) : 3.2;
+      const noseLen = noseLenInput ? parseFloat(noseLenInput.value) : 1.6;
+      const engineZ = (cabinLen / 2) + noseLen + 0.25;
+
+      cameraTarget.set(0, 0, engineZ);
+      cameraRadius = 3.6;
+      cameraElevation = 0.45;
+      cameraAzimuth = 0.85;
+      setActiveCamButton('cam-btn-engine');
+      updateCameraSafe();
     }
 
     function initControls(el) {
@@ -410,7 +454,7 @@
         updateCameraSafe();
       }, { passive: false });
 
-      // Touch móvil
+      // Soporte táctil
       let touchStartDist = 0;
       let lastTouchPos = { x: 0, y: 0 };
 
@@ -476,36 +520,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function focusEngine() {
-      const cabinLen = parseFloat(document.getElementById('cabin-len').value);
-      const noseLen = parseFloat(document.getElementById('nose-len').value);
-      const engineZ = (cabinLen / 2) + noseLen + 0.25;
-
-      cameraTarget.set(0, 0, engineZ);
-      cameraRadius = 3.6;
-      cameraElevation = 0.45;
-      cameraAzimuth = 0.85;
-      updateCameraSafe();
-    }
-
-    function setCameraView(view) {
-      cameraTarget.set(0, 0, 0);
-      if (view === 'iso') {
-        cameraRadius = 15;
-        cameraAzimuth = Math.PI / 4;
-        cameraElevation = 0.55;
-      } else if (view === 'top') {
-        cameraRadius = 16;
-        cameraAzimuth = 0;
-        cameraElevation = 1.44; // casi 90 grados sin singularidad
-      } else if (view === 'side') {
-        cameraRadius = 16;
-        cameraAzimuth = Math.PI / 2;
-        cameraElevation = 0.05;
-      }
-      updateCameraSafe();
-    }
-
     function toggleEngine() {
       isEngineRunning = !isEngineRunning;
       const btn = document.getElementById('btn-engine-toggle');
@@ -513,17 +527,25 @@
       const statusText = document.getElementById('engine-status-text');
 
       if (isEngineRunning) {
-        btn.innerHTML = `<i class="fa-solid fa-power-off"></i> <span>Apagar Motor</span>`;
-        btn.className = "w-full py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/30 transition flex items-center justify-center gap-2";
-        led.className = "w-3.5 h-3.5 rounded-full bg-emerald-400 shadow-md shadow-emerald-400/80 animate-pulse";
-        statusText.textContent = "EN MARCHA (2450 RPM)";
-        statusText.className = "text-[10px] text-emerald-400 font-mono font-bold";
+        if (btn) {
+          btn.innerHTML = `<i class="fa-solid fa-power-off"></i> <span>Apagar Motor</span>`;
+          btn.className = "w-full py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-600/30 transition flex items-center justify-center gap-2";
+        }
+        if (led) led.className = "w-3.5 h-3.5 rounded-full bg-emerald-400 shadow-md shadow-emerald-400/80 animate-pulse";
+        if (statusText) {
+          statusText.textContent = "EN MARCHA (2450 RPM)";
+          statusText.className = "text-[10px] text-emerald-400 font-mono font-bold";
+        }
       } else {
-        btn.innerHTML = `<i class="fa-solid fa-power-off"></i> <span>Encender Motor</span>`;
-        btn.className = "w-full py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition flex items-center justify-center gap-2";
-        led.className = "w-3.5 h-3.5 rounded-full bg-red-500 shadow-md shadow-red-500/50";
-        statusText.textContent = "APAGADO / REPOSO";
-        statusText.className = "text-[10px] text-slate-400 font-mono";
+        if (btn) {
+          btn.innerHTML = `<i class="fa-solid fa-power-off"></i> <span>Encender Motor</span>`;
+          btn.className = "w-full py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/30 transition flex items-center justify-center gap-2";
+        }
+        if (led) led.className = "w-3.5 h-3.5 rounded-full bg-red-500 shadow-md shadow-red-500/50";
+        if (statusText) {
+          statusText.textContent = "APAGADO / REPOSO";
+          statusText.className = "text-[10px] text-slate-400 font-mono";
+        }
       }
     }
 
@@ -533,13 +555,17 @@
         const btn = document.getElementById(`tab-btn-${s}`);
         const panel = document.getElementById(`stage-${s}`);
         if (s === stage) {
-          btn.classList.add('active', 'text-white');
-          btn.classList.remove('text-slate-400');
-          panel.classList.remove('hidden');
+          if (btn) {
+            btn.classList.add('active', 'text-white');
+            btn.classList.remove('text-slate-400');
+          }
+          if (panel) panel.classList.remove('hidden');
         } else {
-          btn.classList.remove('active', 'text-white');
-          btn.classList.add('text-slate-400');
-          panel.classList.add('hidden');
+          if (btn) {
+            btn.classList.remove('active', 'text-white');
+            btn.classList.add('text-slate-400');
+          }
+          if (panel) panel.classList.add('hidden');
         }
       });
       highlightStageIn3D(stage);
@@ -568,10 +594,12 @@
       renderStyle = style;
       ['solid', 'xray', 'wire'].forEach(s => {
         const btn = document.getElementById(`btn-style-${s}`);
-        if (s === style) {
-          btn.className = 'py-1 px-2 rounded text-xs bg-sky-600 text-white font-semibold border border-sky-500';
-        } else {
-          btn.className = 'py-1 px-2 rounded text-xs bg-slate-800 text-slate-200 border border-slate-700';
+        if (btn) {
+          if (s === style) {
+            btn.className = 'py-1 px-2 rounded text-xs bg-sky-600 text-white font-semibold border border-sky-500';
+          } else {
+            btn.className = 'py-1 px-2 rounded text-xs bg-slate-800 text-slate-200 border border-slate-700';
+          }
         }
       });
       buildAircraft();
@@ -588,31 +616,43 @@
       buildAircraft();
     }
 
-    // --- CONSTRUCTOR GEOMÉTRICO 3D ---
+    // --- CONSTRUCTOR RESILIENTE CON FALLBACKS ---
     function buildAircraft() {
       if (!scene || !planeGroup) return;
 
-      const noseLen = parseFloat(document.getElementById('nose-len').value);
-      const noseTaperPercent = parseFloat(document.getElementById('nose-taper').value) / 100;
-      const cabinLen = parseFloat(document.getElementById('cabin-len').value);
-      const fuseRadius = parseFloat(document.getElementById('fuse-width').value) / 2;
-      const tailconeLen = parseFloat(document.getElementById('tailcone-len').value);
+      const getVal = (id, fallback) => {
+        const el = document.getElementById(id);
+        return el ? parseFloat(el.value) : fallback;
+      };
 
-      const wingSpan = parseFloat(document.getElementById('wing-span').value);
-      const wingChord = parseFloat(document.getElementById('wing-chord').value);
-      const wingPos = document.getElementById('wing-pos').value;
+      const getCheck = (id, fallback) => {
+        const el = document.getElementById(id);
+        return el ? el.checked : fallback;
+      };
 
-      const showFrames = document.getElementById('show-frames').checked;
-      const showControlsSys = document.getElementById('show-controls-sys').checked;
-      const showTanks = document.getElementById('show-tanks').checked;
-      const fuelLoc = document.getElementById('fuel-loc').value;
+      const noseLen = getVal('nose-len', 1.6);
+      const noseTaperPercent = getVal('nose-taper', 45) / 100;
+      const cabinLen = getVal('cabin-len', 3.2);
+      const fuseRadius = getVal('fuse-width', 1.2) / 2;
+      const tailconeLen = getVal('tailcone-len', 3.4);
 
-      const showEngineBlock = document.getElementById('show-engine-block').checked;
-      const showEngineInternals = document.getElementById('show-engine-internals').checked;
-      const showEngineValves = document.getElementById('show-engine-valves').checked;
-      const isCrankcaseTransparent = document.getElementById('transparent-crankcase').checked;
-      const propDiam = parseFloat(document.getElementById('prop-diam').value);
-      const powerHp = parseFloat(document.getElementById('power-hp').value);
+      const wingSpan = getVal('wing-span', 10.0);
+      const wingChord = getVal('wing-chord', 1.6);
+      const wingPosEl = document.getElementById('wing-pos');
+      const wingPos = wingPosEl ? wingPosEl.value : 'low';
+
+      const showFrames = getCheck('show-frames', true);
+      const showControlsSys = getCheck('show-controls-sys', true);
+      const showTanks = getCheck('show-tanks', true);
+      const fuelLocEl = document.getElementById('fuel-loc');
+      const fuelLoc = fuelLocEl ? fuelLocEl.value : 'wings';
+
+      const showEngineBlock = getCheck('show-engine-block', true);
+      const showEngineInternals = getCheck('show-engine-internals', true);
+      const showEngineValves = getCheck('show-engine-valves', true);
+      const isCrankcaseTransparent = getCheck('transparent-crankcase', true);
+      const propDiam = getVal('prop-diam', 1.9);
+      const powerHp = getVal('power-hp', 180);
 
       const setTxt = (id, txt) => {
         const el = document.getElementById(id);
@@ -620,7 +660,7 @@
       };
 
       setTxt('val-nose-len', noseLen.toFixed(1) + ' m');
-      setTxt('val-nose-taper', document.getElementById('nose-taper').value + '%');
+      setTxt('val-nose-taper', Math.round(noseTaperPercent * 100) + '%');
       setTxt('val-cabin-len', cabinLen.toFixed(1) + ' m');
       setTxt('val-fuse-width', (fuseRadius * 2).toFixed(1) + ' m');
       setTxt('val-tailcone-len', tailconeLen.toFixed(1) + ' m');
@@ -763,7 +803,7 @@
         });
       }
 
-      // 3. MOTOR BOXER DETALLADO
+      // 3. MOTOR BOXER CINEMÁTICO
       const engineZ = (cabinLen / 2) + noseLen + 0.15;
       const engineOrigin = new THREE.Group();
       engineOrigin.position.set(0, -fuseRadius * 0.08, engineZ);
