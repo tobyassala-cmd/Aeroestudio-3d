@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AeroStudio 3D - Modular Aeronautical CAD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #0b1120; color: #f1f5f9; font-family: ui-sans-serif, system-ui, sans-serif; }
+    #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+    .ui-panel { z-index: 10; backdrop-filter: blur(12px); background-color: rgba(15, 23, 42, 0.88); border: 1px solid rgba(51, 65, 85, 0.6); }
+    .tab-btn.active { background-color: #0284c7; color: #ffffff; border-color: #38bdf8; }
+    input[type=range] { accent-color: #38bdf8; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body>
+
+  <!-- Contenedor 3D Three.js -->
+  <div id="canvas-container"></div>
+
+  <!-- Barra Superior -->
+  <header class="absolute top-0 left-0 right-0 p-4 ui-panel border-b flex justify-between items-center z-10">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-lg bg-sky-600 flex items-center justify-center text-white shadow-lg shadow-sky-600/30">
+        <i class="fa-solid fa-plane-up"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-lg tracking-wide text-slate-100 flex items-center gap-2">
+          AeroStudio 3D <span class="text-xs px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30">Modular v2.0</span>
+        </h1>
+        <p class="text-xs text-slate-400">Diseño aeronáutico paramétrico por etapas de ingeniería</p>
+      </div>
+    </div>
+
+    <!-- Modos de Vista y Cámaras -->
+    <div class="flex items-center space-x-2">
+      <div class="flex bg-slate-800/80 p-1 rounded-lg border border-slate-700 text-xs">
+        <button onclick="setCameraView('iso')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-300">Iso</button>
+        <button onclick="setCameraView('top')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-300">Planta</button>
+        <button onclick="setCameraView('side')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-300">Perfil</button>
+        <button onclick="setCameraView('front')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-300">Frente</button>
+      </div>
+
+      <button onclick="takeScreenshot()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 transition" title="Captura de pantalla">
+        <i class="fa-solid fa-camera mr-1"></i> Captura
+      </button>
+    </div>
+  </header>
+
+  <!-- Panel Lateral Izquierdo: Configuración por Etapas -->
+  <aside class="absolute left-4 top-20 bottom-4 w-96 ui-panel rounded-xl flex flex-col z-10 overflow-hidden shadow-2xl">
+    
+    <!-- Pestañas de Etapas -->
+    <div class="grid grid-cols-3 border-b border-slate-700/80 bg-slate-900/60 p-1 gap-1 text-xs font-semibold">
+      <button id="tab-btn-struct" onclick="switchStage('struct')" class="tab-btn active py-2.5 px-2 rounded-lg flex flex-col items-center gap-1 border border-transparent transition">
+        <i class="fa-solid fa-cubes text-sm"></i>
+        <span>1. Estructura</span>
+      </button>
+      <button id="tab-btn-systems" onclick="switchStage('systems')" class="tab-btn py-2.5 px-2 rounded-lg flex flex-col items-center gap-1 border border-transparent transition text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-network-wired text-sm"></i>
+        <span>2. Sistemas</span>
+      </button>
+      <button id="tab-btn-power" onclick="switchStage('power')" class="tab-btn py-2.5 px-2 rounded-lg flex flex-col items-center gap-1 border border-transparent transition text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-fan text-sm"></i>
+        <span>3. Planta Poder</span>
+      </button>
+    </div>
+
+    <!-- Contenido Scrollable de Controles -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-5 text-xs">
+
+      <!-- ================= ETAPA 1: ESTRUCTURA ================= -->
+      <div id="stage-struct" class="space-y-4">
+        
+        <div class="flex items-center justify-between pb-1 border-b border-slate-700/60">
+          <span class="text-xs font-bold text-sky-400 uppercase tracking-wider">Geometría del Fuselaje</span>
+          <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
+            <input type="checkbox" id="show-frames" onchange="updateAirplane()" checked class="rounded"> Cuadernas
+          </label>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-slate-300 mb-1">
+            <span>Longitud Total:</span>
+            <span id="val-fuse-len" class="font-mono text-sky-400">8.0 m</span>
+          </div>
+          <input type="range" id="fuse-len" min="4" max="15" step="0.2" value="8" oninput="updateAirplane()" class="w-full">
+        </div>
+
+        <div>
+          <div class="flex justify-between text-slate-300 mb-1">
+            <span>Diámetro Máximo:</span>
+            <span id="val-fuse-width" class="font-mono text-sky-400">1.2 m</span>
+          </div>
+          <input type="range" id="fuse-width" min="0.6" max="2.5" step="0.1" value="1.2" oninput="updateAirplane()" class="w-full">
+        </div>
+
+        <div class="pt-2 border-t border-slate-700/60">
+          <div class="flex items-center justify-between pb-1">
+            <span class="text-xs font-bold text-sky-400 uppercase tracking-wider">Ala Principal</span>
+            <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
+              <input type="checkbox" id="show-ribs" onchange="updateAirplane()" checked class="rounded"> Costillas
+            </label>
+          </div>
+
+          <div class="space-y-3 mt-2">
+            <div>
+              <div class="flex justify-between text-slate-300 mb-1">
+                <span>Envergadura ($b$):</span>
+                <span id="val-wing-span" class="font-mono text-sky-400">10.0 m</span>
+              </div>
+              <input type="range" id="wing-span" min="5" max="20" step="0.5" value="10" oninput="updateAirplane()" class="w-full">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-300 mb-1">
+                <span>Cuerda Raíz ($c_r$):</span>
+                <span id="val-wing-chord" class="font-mono text-sky-400">1.6 m</span>
+              </div>
+              <input type="range" id="wing-chord" min="0.8" max="3" step="0.1" value="1.6" oninput="updateAirplane()" class="w-full">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-300 mb-1">
+                <span>Flecha (Sweep):</span>
+                <span id="val-wing-sweep" class="font-mono text-sky-400">3°</span>
+              </div>
+              <input type="range" id="wing-sweep" min="-5" max="35" step="1" value="3" oninput="updateAirplane()" class="w-full">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-300 mb-1">
+                <span>Diedro:</span>
+                <span id="val-wing-dihedral" class="font-mono text-sky-400">2°</span>
+              </div>
+              <input type="range" id="wing-dihedral" min="-2" max="10" step="0.5" value="2" oninput="updateAirplane()" class="w-full">
+            </div>
+
+            <div>
+              <label class="text-slate-300 block mb-1">Configuración Alar:</label>
+              <select id="wing-pos" onchange="updateAirplane()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-200">
+                <option value="high">Ala Alta (Estilo Cessna)</option>
+                <option value="mid">Ala Media (Acrobático / Caza)</option>
+                <option value="low" selected>Ala Baja (Piper / Comercial)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-700/60">
+          <span class="text-xs font-bold text-sky-400 uppercase tracking-wider block mb-2">Empenajes de Cola</span>
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>Envergadura Estabilizador Horiz.:</span>
+              <span id="val-tail-h" class="font-mono text-sky-400">3.2 m</span>
+            </div>
+            <input type="range" id="tail-h" min="1.5" max="6" step="0.2" value="3.2" oninput="updateAirplane()" class="w-full">
+          </div>
+          <div class="mt-2">
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>Altura Deriva Vertical:</span>
+              <span id="val-tail-v" class="font-mono text-sky-400">1.5 m</span>
+            </div>
+            <input type="range" id="tail-v" min="0.8" max="3" step="0.1" value="1.5" oninput="updateAirplane()" class="w-full">
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ETAPA 2: SISTEMAS ================= -->
+      <div id="stage-systems" class="space-y-4 hidden">
+        <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px]">
+          <i class="fa-solid fa-circle-info mr-1"></i> Rutas hidráulicas, tanques de combustible húmedos y electrónica de abordo.
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between pb-1 border-b border-slate-700/60 mb-2">
+            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Combustible (Fuel System)</span>
+            <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
+              <input type="checkbox" id="show-tanks" onchange="updateAirplane()" checked class="rounded"> Visible
+            </label>
+          </div>
+          <div>
+            <label class="text-slate-300 block mb-1">Ubicación de Tanques:</label>
+            <select id="fuel-loc" onchange="updateAirplane()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-200">
+              <option value="wings" selected>Alas (Wet Wings)</option>
+              <option value="fuse">Fuselaje Central</option>
+              <option value="both">Alas + Depósito Fuselaje</option>
+            </select>
+          </div>
+          <div class="mt-2">
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>Capacidad Estimada:</span>
+              <span id="val-fuel-cap" class="font-mono text-emerald-400">180 L</span>
+            </div>
+            <input type="range" id="fuel-cap" min="60" max="600" step="20" value="180" oninput="updateAirplane()" class="w-full">
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-700/60">
+          <div class="flex items-center justify-between pb-1 mb-2">
+            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Mandos de Vuelo (Flight Controls)</span>
+            <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
+              <input type="checkbox" id="show-cables" onchange="updateAirplane()" checked class="rounded"> Varillaje / Cables
+            </label>
+          </div>
+          <p class="text-[11px] text-slate-400">Líneas de transmisión desde cabina hacia alerones, timón de profundidad y dirección.</p>
+        </div>
+
+        <div class="pt-2 border-t border-slate-700/60">
+          <div class="flex items-center justify-between pb-1 mb-2">
+            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Aviónica y Batería</span>
+            <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
+              <input type="checkbox" id="show-avionics" onchange="updateAirplane()" checked class="rounded"> Bahía Electrónica
+            </label>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="bg-slate-900/80 p-2 rounded border border-slate-700">
+              <span class="text-slate-400 block">Bus Eléctrico</span>
+              <span class="text-emerald-400 font-bold">28 V DC</span>
+            </div>
+            <div class="bg-slate-900/80 p-2 rounded border border-slate-700">
+              <span class="text-slate-400 block">Batería Ppal.</span>
+              <span class="text-emerald-400 font-bold">24 Ah LiFePO4</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ETAPA 3: PLANTA DE PODER ================= -->
+      <div id="stage-power" class="space-y-4 hidden">
+        <div class="flex items-center justify-between pb-1 border-b border-slate-700/60">
+          <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Grupo Motor</span>
+          <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
+            <input type="checkbox" id="show-engine" onchange="updateAirplane()" checked class="rounded"> Visible
+          </label>
+        </div>
+
+        <div>
+          <label class="text-slate-300 block mb-1">Tipo de Motor:</label>
+          <select id="engine-type" onchange="updateAirplane()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-200">
+            <option value="piston-boxer" selected>Pistón 4-Cilindros Boxer (Lycoming O-320)</option>
+            <option value="piston-radial">Motor Radial (Histórico / Agrícola)</option>
+            <option value="turboprop">Turbohélice Ligero (PT6A Class)</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-slate-300 mb-1">
+            <span>Potencia Nominal:</span>
+            <span id="val-power-hp" class="font-mono text-amber-400">160 HP</span>
+          </div>
+          <input type="range" id="power-hp" min="80" max="500" step="10" value="160" oninput="updateAirplane()" class="w-full">
+        </div>
+
+        <div class="pt-2 border-t border-slate-700/60">
+          <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block mb-2">Hélice y Cono (Spinner)</span>
+          
+          <div>
+            <div class="flex justify-between text-slate-300 mb-1">
+              <span>Diámetro de Hélice:</span>
+              <span id="val-prop-diam" class="font-mono text-amber-400">1.9 m</span>
+            </div>
+            <input type="range" id="prop-diam" min="1.2" max="2.8" step="0.05" value="1.9" oninput="updateAirplane()" class="w-full">
+          </div>
+
+          <div class="mt-2">
+            <label class="text-slate-300 block mb-1">Número de Palas:</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="setPropBlades(2)" id="blade-btn-2" class="p-1.5 rounded bg-sky-600 text-white font-semibold">2 Palas</button>
+              <button onclick="setPropBlades(3)" id="blade-btn-3" class="p-1.5 rounded bg-slate-800 text-slate-300">3 Palas</button>
+              <button onclick="setPropBlades(4)" id="blade-btn-4" class="p-1.5 rounded bg-slate-800 text-slate-300">4 Palas</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-900/90 rounded-lg border border-amber-500/30 text-[11px] space-y-1.5">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Tracción Estática Est. ($T_0$):</span>
+            <span id="calc-thrust" class="text-amber-400 font-mono font-bold">~320 kgf</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Consumo al 75% pot.:</span>
+            <span id="calc-burn" class="text-slate-200 font-mono">34 L/h</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modos de Renderizado -->
+    <div class="p-3 border-t border-slate-700/80 bg-slate-900/80">
+      <div class="text-[11px] font-semibold text-slate-400 mb-2 flex justify-between items-center">
+        <span>MODO VISUAL DE ANÁLISIS:</span>
+      </div>
+      <div class="grid grid-cols-3 gap-1.5">
+        <button onclick="setRenderStyle('solid')" id="btn-style-solid" class="py-1 px-2 rounded text-xs bg-slate-800 text-slate-200 border border-slate-700">Sólido</button>
+        <button onclick="setRenderStyle('xray')" id="btn-style-xray" class="py-1 px-2 rounded text-xs bg-sky-600 text-white font-semibold border border-sky-500">Rayos-X</button>
+        <button onclick="setRenderStyle('wire')" id="btn-style-wire" class="py-1 px-2 rounded text-xs bg-slate-800 text-slate-200 border border-slate-700">Líneas</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Panel Inferior Derecho: Telemetría de Ingeniería -->
+  <aside class="absolute bottom-4 right-4 ui-panel rounded-xl p-4 w-80 z-10 text-xs shadow-2xl border border-slate-700">
+    <div class="flex justify-between items-center pb-2 mb-2 border-b border-slate-700">
+      <span class="font-bold uppercase tracking-wider text-slate-300">Balance y Telemetría</span>
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+    </div>
+    <div class="space-y-2 font-mono">
+      <div class="flex justify-between">
+        <span class="text-slate-400">Sup. Alar ($S$):</span>
+        <span id="calc-wing-area" class="text-sky-400 font-bold">14.4 m²</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-400">Aspect Ratio ($AR$):</span>
+        <span id="calc-aspect-ratio" class="text-sky-400 font-bold">6.94</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-400">Peso Estructura Est.:</span>
+        <span id="calc-weight-empty" class="text-slate-200">540 kg</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-400">Posición $CG$ Estimada:</span>
+        <span id="calc-cg" class="text-amber-400">31% CAM</span>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    // --- ESTADO GLOBAL ---
+    let activeStage = 'struct';
+    let renderStyle = 'xray'; // 'solid', 'xray', 'wire'
+    let propBladesCount = 2;
+
+    // Three.js variables
+    let scene, camera, renderer, controls;
+    let planeGroup;
+    let structGroup, systemsGroup, powerGroup;
+
+    // Inicialización al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+      initThree();
+      updateAirplane();
+      animate();
+    });
+
+    function initThree() {
+      const container = document.getElementById('canvas-container');
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0b1120);
+      scene.fog = new THREE.FogExp2(0x0b1120, 0.025);
+
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(10, 6, 12);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      container.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxDistance = 60;
+      controls.minDistance = 2;
+
+      // Iluminación
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      dirLight.position.set(15, 25, 15);
+      dirLight.castShadow = true;
+      scen
