@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AeroStudio 3D - Render Fotorealista y Cinemática</title>
+  <title>AeroStudio 3D - Cinemática y Mandos</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -35,9 +35,9 @@
       </div>
       <div>
         <h1 class="font-bold text-base sm:text-lg tracking-wide text-slate-100 flex items-center gap-2">
-          AeroStudio 3D <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold">v5.5 Realista</span>
+          AeroStudio 3D <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">v6.0 Cinemática Total</span>
         </h1>
-        <p class="text-[11px] text-slate-400 hidden sm:block">Modelado con perfiles aerodinámicos, tren de aterrizaje y pintura aeronáutica</p>
+        <p class="text-[11px] text-slate-400 hidden sm:block">Alas corregidas, poleas giratorias y visualización de mandos</p>
       </div>
     </div>
 
@@ -87,7 +87,7 @@
         </div>
 
         <div class="p-2.5 bg-slate-900/70 rounded-lg border border-slate-800 space-y-2">
-          <span class="font-semibold text-slate-300 block text-[11px]">Sección 1: Morro y Capó</span>
+          <span class="font-semibold text-slate-300 block text-[11px]">Sección 1: Morro Frontal</span>
           <div>
             <div class="flex justify-between text-slate-400 mb-0.5">
               <span>Longitud Morro:</span>
@@ -130,12 +130,7 @@
         </div>
 
         <div class="pt-2 border-t border-slate-700 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-sky-400 uppercase tracking-wider block">Alas (Perfil NACA Estilizado)</span>
-            <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
-              <input type="checkbox" id="show-wingtips" onchange="buildAircraft()" checked> Luces Nav
-            </label>
-          </div>
+          <span class="text-xs font-bold text-sky-400 uppercase tracking-wider block">Superficies Alares</span>
           <div>
             <div class="flex justify-between text-slate-300 mb-0.5">
               <span>Envergadura:</span>
@@ -153,22 +148,22 @@
           <div>
             <label class="text-slate-300 block mb-1">Posición del Ala:</label>
             <select id="wing-pos" onchange="buildAircraft()" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-slate-200">
-              <option value="high">Ala Alta (Estilo Cessna 172)</option>
-              <option value="mid">Ala Media (Acrobático / Extra 300)</option>
-              <option value="low" selected>Ala Baja (Piper Cherokee / Beechcraft)</option>
+              <option value="high">Ala Alta (Cessna)</option>
+              <option value="mid">Ala Media (Acrobático)</option>
+              <option value="low" selected>Ala Baja (Piper)</option>
             </select>
           </div>
         </div>
       </div>
 
-      <!-- ================= ETAPA 2: SISTEMAS ================= -->
+      <!-- ================= ETAPA 2: SISTEMAS Y CINEMÁTICA ================= -->
       <div id="stage-systems" class="space-y-4 hidden">
         <div class="p-2.5 bg-gradient-to-r from-slate-900 to-slate-800 rounded-xl border border-sky-500/40 space-y-3">
-          <span class="font-bold text-sky-400 text-xs block uppercase tracking-wider"><i class="fa-solid fa-dharmachakra mr-1"></i> Timón de Mando en Cabina</span>
+          <span class="font-bold text-sky-400 text-xs block uppercase tracking-wider"><i class="fa-solid fa-dharmachakra mr-1"></i> Timón de Mando y Poleas</span>
           
           <div>
             <div class="flex justify-between text-slate-300 mb-0.5">
-              <span>Alabeo (Alerones):</span>
+              <span>Alabeo (Alerones / Poleas Cyan):</span>
               <span id="val-ctrl-roll" class="font-mono text-cyan-400">0°</span>
             </div>
             <input type="range" id="ctrl-roll" min="-30" max="30" step="1" value="0" oninput="updateFlightControls()" class="w-full">
@@ -176,7 +171,7 @@
 
           <div>
             <div class="flex justify-between text-slate-300 mb-0.5">
-              <span>Cabeceo (Elevador):</span>
+              <span>Cabeceo (Elevador / Balancín Naranja):</span>
               <span id="val-ctrl-pitch" class="font-mono text-orange-400">0°</span>
             </div>
             <input type="range" id="ctrl-pitch" min="-20" max="20" step="1" value="0" oninput="updateFlightControls()" class="w-full">
@@ -184,7 +179,7 @@
 
           <div>
             <div class="flex justify-between text-slate-300 mb-0.5">
-              <span>Flaps:</span>
+              <span>Flaps (Tambor Amarillo):</span>
               <span id="val-ctrl-flaps" class="font-mono text-amber-400">0°</span>
             </div>
             <input type="range" id="ctrl-flaps" min="0" max="35" step="5" value="0" oninput="updateFlightControls()" class="w-full">
@@ -192,7 +187,7 @@
 
           <div>
             <div class="flex justify-between text-slate-300 mb-0.5">
-              <span>Dirección (Rudder):</span>
+              <span>Dirección (Timón / Sector de Cola):</span>
               <span id="val-ctrl-yaw" class="font-mono text-orange-400">0°</span>
             </div>
             <input type="range" id="ctrl-yaw" min="-25" max="25" step="1" value="0" oninput="updateFlightControls()" class="w-full">
@@ -203,14 +198,35 @@
           </button>
         </div>
 
-        <div class="space-y-2">
-          <div class="flex items-center justify-between pb-1 border-b border-slate-700">
-            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Cables de Control</span>
-            <label class="inline-flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
-              <input type="checkbox" id="show-controls-sys" onchange="buildAircraft()" checked> Visible
-            </label>
+        <!-- Guía Visual de Poleas y Circuitos de Control -->
+        <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-700 space-y-2">
+          <span class="font-bold text-slate-200 text-xs block uppercase tracking-wider">Identificación de Poleas y Mandos</span>
+          
+          <div class="space-y-2 text-[11px]">
+            <div class="flex items-center gap-2 p-1.5 rounded bg-slate-800/80 border border-cyan-500/40">
+              <span class="w-3 h-3 rounded-full bg-cyan-400 shrink-0"></span>
+              <div>
+                <span class="text-cyan-300 font-bold block">Circuito de Alerones</span>
+                <span class="text-slate-400 text-[10px]">Polea central bajo cabina + 2 poleas de reenvío en puntas alares.</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 p-1.5 rounded bg-slate-800/80 border border-amber-500/40">
+              <span class="w-3 h-3 rounded-full bg-amber-400 shrink-0"></span>
+              <div>
+                <span class="text-amber-300 font-bold block">Circuito de Flaps</span>
+                <span class="text-slate-400 text-[10px]">Tambor reductor central + actuadores telescópicos interiores.</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 p-1.5 rounded bg-slate-800/80 border border-orange-500/40">
+              <span class="w-3 h-3 rounded-full bg-orange-500 shrink-0"></span>
+              <div>
+                <span class="text-orange-300 font-bold block">Circuito de Empenaje</span>
+                <span class="text-slate-400 text-[10px]">Balancín acodado en cola para timón de profundidad y dirección.</span>
+              </div>
+            </div>
           </div>
-          <p class="text-[11px] text-slate-400">En los modos Rayos-X y Líneas se revelan las trayectorias de cables hasta las bocinas de mando.</p>
         </div>
       </div>
 
@@ -229,18 +245,6 @@
           </button>
         </div>
 
-        <div class="p-2.5 bg-slate-900/90 rounded-lg border border-slate-800 space-y-2">
-          <span class="font-semibold text-amber-400 block text-xs uppercase tracking-wider">Inspección Mecánica</span>
-          <div class="grid grid-cols-2 gap-2 text-[11px]">
-            <label class="flex items-center gap-1.5 cursor-pointer text-slate-200">
-              <input type="checkbox" id="show-engine-block" onchange="buildAircraft()" checked> Cárter Exterior
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer text-slate-200">
-              <input type="checkbox" id="show-engine-internals" onchange="buildAircraft()" checked> Pistones/Bielas
-            </label>
-          </div>
-        </div>
-
         <div class="space-y-3">
           <div>
             <div class="flex justify-between text-slate-300 mb-0.5">
@@ -249,27 +253,16 @@
             </div>
             <input type="range" id="prop-diam" min="1.4" max="2.4" step="0.05" value="1.9" oninput="buildAircraft()" class="w-full">
           </div>
-          <div>
-            <label class="text-slate-300 block mb-1">Palas:</label>
-            <div class="grid grid-cols-3 gap-2">
-              <button onclick="setPropBlades(2)" id="blade-btn-2" class="p-1.5 rounded bg-sky-600 text-white font-semibold">2 Palas</button>
-              <button onclick="setPropBlades(3)" id="blade-btn-3" class="p-1.5 rounded bg-slate-800 text-slate-300">3 Palas</button>
-              <button onclick="setPropBlades(4)" id="blade-btn-4" class="p-1.5 rounded bg-slate-800 text-slate-300">4 Palas</button>
-            </div>
-          </div>
         </div>
       </div>
 
     </div>
 
-    <!-- Modos de Renderizado con Opción REALISTA -->
+    <!-- Modos de Renderizado -->
     <div class="p-3 border-t border-slate-700 bg-slate-900/95">
-      <div class="text-[11px] font-semibold text-slate-300 mb-2 flex items-center justify-between">
-        <span>MODO VISUAL:</span>
-        <span class="text-[10px] text-amber-400 font-normal"><i class="fa-solid fa-sparkles mr-1"></i>Modo Estudio</span>
-      </div>
+      <div class="text-[11px] font-semibold text-slate-300 mb-2">MODO VISUAL:</div>
       <div class="grid grid-cols-4 gap-1">
-        <button onclick="setRenderStyle('realistic')" id="btn-style-realistic" class="style-btn active py-1.5 px-1 rounded text-xs bg-amber-600 text-white font-bold border border-amber-400 shadow-md shadow-amber-600/30">Realista</button>
+        <button onclick="setRenderStyle('realistic')" id="btn-style-realistic" class="style-btn active py-1.5 px-1 rounded text-xs bg-sky-600 text-white font-bold border border-sky-400">Realista</button>
         <button onclick="setRenderStyle('solid')" id="btn-style-solid" class="style-btn py-1.5 px-1 rounded text-xs bg-slate-800 text-slate-200 border border-slate-700">Sólido</button>
         <button onclick="setRenderStyle('xray')" id="btn-style-xray" class="style-btn py-1.5 px-1 rounded text-xs bg-slate-800 text-slate-200 border border-slate-700">Rayos-X</button>
         <button onclick="setRenderStyle('wire')" id="btn-style-wire" class="style-btn py-1.5 px-1 rounded text-xs bg-slate-800 text-slate-200 border border-slate-700">Líneas</button>
@@ -280,7 +273,7 @@
   <script>
     // --- ESTADO GLOBAL ---
     let activeStage = 'struct';
-    let renderStyle = 'realistic'; // Modo por defecto realista
+    let renderStyle = 'realistic';
     let propBladesCount = 2;
 
     let flightControls = { roll: 0, pitch: 0, flaps: 0, yaw: 0 };
@@ -292,7 +285,7 @@
     let scene, camera, renderer;
     let planeGroup, structGroup, systemsGroup, powerGroup;
 
-    // Referencias de partes móviles
+    // Referencias cinemáticas móviles
     let leftAileronMesh = null;
     let rightAileronMesh = null;
     let leftFlapMesh = null;
@@ -302,11 +295,16 @@
     let cockpitYoke = null;
     let cockpitColumn = null;
     let propAssembly = null;
-    let propBlurDisk = null; // Disco translúcido de hélice en marcha
-    let crankshaftMesh = null;
-    let pistonMeshes = [];
+    let propBlurDisk = null;
 
-    // Cámara euclidiana esférica
+    // Poleas funcionales
+    let centralAileronPulley = null;
+    let leftAileronPulley = null;
+    let rightAileronPulley = null;
+    let flapDrum = null;
+    let tailBellcrank = null;
+
+    // Cámara
     let isOrbiting = false;
     let isPanning = false;
     let lastMousePos = { x: 0, y: 0 };
@@ -314,9 +312,6 @@
     let cameraAzimuth = 0.75;
     let cameraElevation = 0.38;
     let cameraTarget = new THREE.Vector3(0, 0, 0);
-
-    // Iluminación ambiental y de estudio dinámicas
-    let studioLights = [];
 
     window.addEventListener('DOMContentLoaded', () => {
       initEngine3D();
@@ -340,27 +335,36 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.1;
       container.appendChild(renderer.domElement);
 
-      // Configuración de iluminación tipo Hangar / Estudio Profesional
-      setupLighting();
+      // Iluminación
+      const amb = new THREE.AmbientLight(0xdbeafe, 0.65);
+      scene.add(amb);
 
-      // Suelo de hangar reflectante con líneas de señalización
+      const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+      sun.position.set(16, 24, 18);
+      sun.castShadow = true;
+      sun.shadow.mapSize.width = 2048;
+      sun.shadow.mapSize.height = 2048;
+      scene.add(sun);
+
+      const fill = new THREE.DirectionalLight(0x93c5fd, 0.7);
+      fill.position.set(-18, 12, -15);
+      scene.add(fill);
+
+      const rim = new THREE.DirectionalLight(0x38bdf8, 0.9);
+      rim.position.set(0, 10, -25);
+      scene.add(rim);
+
+      // Suelo
       const floorGeo = new THREE.PlaneGeometry(80, 80);
-      const floorMat = new THREE.MeshStandardMaterial({
-        color: 0x0f172a,
-        roughness: 0.35,
-        metalness: 0.6
-      });
+      const floorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.35, metalness: 0.6 });
       const floor = new THREE.Mesh(floorGeo, floorMat);
       floor.rotation.x = -Math.PI / 2;
       floor.position.y = -1.6;
       floor.receiveShadow = true;
       scene.add(floor);
 
-      // Rejilla técnica sutil
       const grid = new THREE.GridHelper(50, 50, 0x38bdf8, 0x1e293b);
       grid.position.y = -1.59;
       scene.add(grid);
@@ -370,31 +374,6 @@
 
       initControls(container);
       window.addEventListener('resize', onResize);
-    }
-
-    function setupLighting() {
-      // Luz ambiente suave
-      const amb = new THREE.AmbientLight(0xdbeafe, 0.6);
-      scene.add(amb);
-
-      // Luz principal (Key Light con sombras suaves)
-      const sun = new THREE.DirectionalLight(0xffffff, 1.4);
-      sun.position.set(16, 24, 18);
-      sun.castShadow = true;
-      sun.shadow.mapSize.width = 2048;
-      sun.shadow.mapSize.height = 2048;
-      sun.shadow.bias = -0.0001;
-      scene.add(sun);
-
-      // Luz de relleno cálida (Fill Light)
-      const fill = new THREE.DirectionalLight(0x93c5fd, 0.7);
-      fill.position.set(-18, 12, -15);
-      scene.add(fill);
-
-      // Luz trasera de contorno (Rim Light aeronáutico)
-      const rim = new THREE.DirectionalLight(0x38bdf8, 0.9);
-      rim.position.set(0, 10, -25);
-      scene.add(rim);
     }
 
     function updateCameraSafe() {
@@ -445,9 +424,7 @@
     function focusEngine() {
       const cabinLen = parseFloat(document.getElementById('cabin-len').value || 3.2);
       const noseLen = parseFloat(document.getElementById('nose-len').value || 1.6);
-      const engineZ = (cabinLen / 2) + noseLen + 0.25;
-
-      cameraTarget.set(0, 0, engineZ);
+      cameraTarget.set(0, 0, (cabinLen / 2) + noseLen + 0.25);
       cameraRadius = 3.6;
       cameraElevation = 0.45;
       cameraAzimuth = 0.85;
@@ -502,6 +479,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    // --- ACCIONAMIENTO DE MANDOS Y POLEAS ---
     function updateFlightControls() {
       flightControls.roll = parseFloat(document.getElementById('ctrl-roll').value || 0);
       flightControls.pitch = parseFloat(document.getElementById('ctrl-pitch').value || 0);
@@ -527,17 +505,28 @@
       const flapsRad = (flightControls.flaps * Math.PI) / 180;
       const yawRad = (flightControls.yaw * Math.PI) / 180;
 
+      // 1. Manubrio / Yoke
       if (cockpitYoke) cockpitYoke.rotation.z = -rollRad * 1.5;
       if (cockpitColumn) cockpitColumn.position.z = 0.38 - (pitchRad * 0.25);
 
-      if (leftAileronMesh) leftAileronMesh.rotation.x = rollRad * 0.8;
-      if (rightAileronMesh) rightAileronMesh.rotation.x = -rollRad * 0.8;
+      // 2. Alerones diferenciales (borde de fuga trasero correcto)
+      if (leftAileronMesh) leftAileronMesh.rotation.x = -rollRad * 0.8;
+      if (rightAileronMesh) rightAileronMesh.rotation.x = rollRad * 0.8;
 
-      if (leftFlapMesh) leftFlapMesh.rotation.x = flapsRad * 0.9;
-      if (rightFlapMesh) rightFlapMesh.rotation.x = flapsRad * 0.9;
+      // 3. Flaps simétricos hacia abajo
+      if (leftFlapMesh) leftFlapMesh.rotation.x = -flapsRad * 0.9;
+      if (rightFlapMesh) rightFlapMesh.rotation.x = -flapsRad * 0.9;
 
+      // 4. Elevador y Timón
       if (elevatorMesh) elevatorMesh.rotation.x = -pitchRad * 0.9;
       if (rudderMesh) rudderMesh.rotation.y = -yawRad * 0.9;
+
+      // 5. Giro dinámico de las poleas según la deflexión aplicada
+      if (centralAileronPulley) centralAileronPulley.rotation.y = rollRad * 2.5;
+      if (leftAileronPulley) leftAileronPulley.rotation.y = rollRad * 3.0;
+      if (rightAileronPulley) rightAileronPulley.rotation.y = -rollRad * 3.0;
+      if (flapDrum) flapDrum.rotation.x = flapsRad * 2.0;
+      if (tailBellcrank) tailBellcrank.rotation.z = yawRad * 1.8;
     }
 
     function toggleEngine() {
@@ -588,17 +577,19 @@
 
     function highlightStageIn3D(stage) {
       if (!structGroup || !systemsGroup || !powerGroup) return;
-      const setOp = (grp, val) => {
-        grp.traverse(c => {
-          if (c.isMesh && c.material && renderStyle !== 'realistic') {
+
+      // Si estamos en Sistemas, volvemos las alas translúcidas para exhibir las poleas y cables
+      structGroup.traverse(c => {
+        if (c.isMesh && c.material) {
+          if (stage === 'systems') {
             c.material.transparent = true;
-            c.material.opacity = (c.material.userData.baseOpacity || 0.8) * val;
+            c.material.opacity = 0.35;
+          } else {
+            c.material.transparent = renderStyle === 'xray';
+            c.material.opacity = renderStyle === 'xray' ? 0.35 : 1.0;
           }
-        });
-      };
-      if (stage === 'struct') { setOp(structGroup, 1.0); setOp(systemsGroup, 0.25); setOp(powerGroup, 0.3); }
-      if (stage === 'systems') { setOp(structGroup, 0.25); setOp(systemsGroup, 1.0); setOp(powerGroup, 0.25); }
-      if (stage === 'power') { setOp(structGroup, 0.25); setOp(systemsGroup, 0.15); setOp(powerGroup, 1.0); }
+        }
+      });
     }
 
     function setRenderStyle(style) {
@@ -617,14 +608,10 @@
 
     function setPropBlades(n) {
       propBladesCount = n;
-      [2, 3, 4].forEach(i => {
-        const btn = document.getElementById(`blade-btn-${i}`);
-        if (btn) btn.className = i === n ? 'p-1.5 rounded bg-sky-600 text-white font-semibold' : 'p-1.5 rounded bg-slate-800 text-slate-300';
-      });
       buildAircraft();
     }
 
-    // --- CONSTRUCTOR FOTOREALISTA DE LA AERONAVE ---
+    // --- CONSTRUCTOR GEOMÉTRICO PRECISO ---
     function buildAircraft() {
       if (!scene || !planeGroup) return;
 
@@ -642,13 +629,11 @@
       const wingChord = getVal('wing-chord', 1.6);
       const wingPos = (document.getElementById('wing-pos') || {}).value || 'low';
       const showGear = (document.getElementById('show-gear') || { checked: true }).checked;
-      const showWingtips = (document.getElementById('show-wingtips') || { checked: true }).checked;
       const propDiam = getVal('prop-diam', 1.9);
 
       while (planeGroup.children.length > 0) {
         planeGroup.remove(planeGroup.children[0]);
       }
-      pistonMeshes = [];
 
       structGroup = new THREE.Group();
       systemsGroup = new THREE.Group();
@@ -658,13 +643,12 @@
       planeGroup.add(systemsGroup);
       planeGroup.add(powerGroup);
 
-      // --- PALETA DE MATERIALES FOTOREALISTAS AERONÁUTICOS ---
       const isReal = renderStyle === 'realistic';
       const isWire = renderStyle === 'wire';
       const isXray = renderStyle === 'xray';
 
-      // Pintura aeronáutica blanca bicapa brillante (Fuselage Skin)
-      const aircraftPaintMat = new THREE.MeshStandardMaterial({
+      // Materiales
+      const paintMat = new THREE.MeshStandardMaterial({
         color: isReal ? 0xf8fafc : 0x94a3b8,
         roughness: isReal ? 0.22 : 0.4,
         metalness: isReal ? 0.15 : 0.3,
@@ -673,55 +657,39 @@
         opacity: isXray ? 0.35 : 1.0
       });
 
-      // Franja decorativa (Livery Stripe Azul Marino / Aero Blue)
-      const liveryStripeMat = new THREE.MeshStandardMaterial({
-        color: isReal ? 0x0284c7 : 0x0369a1,
+      const stripeMat = new THREE.MeshStandardMaterial({
+        color: 0x0284c7,
         roughness: 0.2,
         metalness: 0.2,
         wireframe: isWire
       });
 
-      // Parabrisas de vidrio tintado con reflejos de cielo
       const glassMat = new THREE.MeshPhysicalMaterial({
-        color: isReal ? 0x0f172a : 0x38bdf8,
+        color: 0x0f172a,
         metalness: 0.1,
         roughness: 0.05,
-        transmission: isReal ? 0.85 : 0.4,
+        transmission: 0.85,
         transparent: true,
-        opacity: isReal ? 0.88 : 0.5,
-        ior: 1.52
+        opacity: 0.85
       });
 
-      // Aluminio pulido (Bordes de ataque y spinner)
-      const polishedAlumMat = new THREE.MeshStandardMaterial({
-        color: 0xe2e8f0,
-        metalness: 0.95,
-        roughness: 0.12,
-        wireframe: isWire
-      });
+      const polishedAlumMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.95, roughness: 0.12 });
+      const tireMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.85 });
 
-      // Goma vulcanizada (Neumáticos)
-      const tireRubberMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.85, metalness: 0.05 });
-      const rimChromeMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.15 });
+      // Materiales de mandos
+      const pulleySteelMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.2 });
+      const aileronCableMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 }); // Cyan
+      const flapCableMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });    // Amarillo
+      const tailCableMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });    // Naranja
 
-      // ================= 1. FUSELAJE ESTILIZADO =================
-      // Sección central
+      // 1. FUSELAJE
       const cabinGeo = new THREE.CylinderGeometry(fuseRadius, fuseRadius, cabinLen, 32);
       cabinGeo.rotateX(Math.PI / 2);
-      const cabinMesh = new THREE.Mesh(cabinGeo, aircraftPaintMat);
+      const cabinMesh = new THREE.Mesh(cabinGeo, paintMat);
       cabinMesh.castShadow = true;
-      cabinMesh.receiveShadow = true;
       structGroup.add(cabinMesh);
 
-      // Franja de diseño decorativa lateral a lo largo del fuselaje
-      if (isReal) {
-        const stripeGeo = new THREE.CylinderGeometry(fuseRadius * 1.002, fuseRadius * 1.002, cabinLen, 32, 1, true, -Math.PI / 12, Math.PI / 6);
-        stripeGeo.rotateX(Math.PI / 2);
-        const stripeMesh = new THREE.Mesh(stripeGeo, liveryStripeMat);
-        structGroup.add(stripeMesh);
-      }
-
-      // Parabrisas aerodinámico integrado
+      // Parabrisas
       const windshieldGeo = new THREE.CylinderGeometry(fuseRadius * 0.98, fuseRadius * 0.99, cabinLen * 0.55, 24, 1, false, 0, Math.PI);
       windshieldGeo.rotateX(Math.PI / 2);
       windshieldGeo.rotateZ(Math.PI);
@@ -729,193 +697,115 @@
       windshield.position.set(0, fuseRadius * 0.22, cabinLen * 0.18);
       structGroup.add(windshield);
 
-      // Morro redondeado con carenado continuo
+      // Morro (+Z)
       const noseTipRadius = fuseRadius * noseTaperPercent;
       const noseGeo = new THREE.CylinderGeometry(noseTipRadius, fuseRadius, noseLen, 32);
       noseGeo.rotateX(Math.PI / 2);
-      const noseMesh = new THREE.Mesh(noseGeo, aircraftPaintMat);
-      const noseCenterZ = (cabinLen / 2) + (noseLen / 2);
-      noseMesh.position.set(0, -fuseRadius * 0.08, noseCenterZ);
+      const noseMesh = new THREE.Mesh(noseGeo, paintMat);
+      noseMesh.position.set(0, -fuseRadius * 0.08, (cabinLen / 2) + (noseLen / 2));
       noseMesh.castShadow = true;
       structGroup.add(noseMesh);
 
-      // Entradas de aire frontales del motor (Air Scoops)
-      if (isReal) {
-        [-1, 1].forEach(side => {
-          const scoop = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.15, 12), new THREE.MeshBasicMaterial({ color: 0x09090b }));
-          scoop.rotateX(Math.PI / 2);
-          scoop.position.set(side * (fuseRadius * 0.45), -fuseRadius * 0.12, (cabinLen / 2) + noseLen - 0.02);
-          structGroup.add(scoop);
-        });
-      }
-
-      // Cono de cola afilado
+      // Cono de cola (-Z)
       const tailconeGeo = new THREE.CylinderGeometry(fuseRadius, fuseRadius * 0.18, tailconeLen, 32);
       tailconeGeo.rotateX(Math.PI / 2);
-      const tailconeMesh = new THREE.Mesh(tailconeGeo, aircraftPaintMat);
+      const tailconeMesh = new THREE.Mesh(tailconeGeo, paintMat);
       tailconeMesh.position.set(0, 0, -(cabinLen / 2) - (tailconeLen / 2));
       tailconeMesh.castShadow = true;
       structGroup.add(tailconeMesh);
 
-      // ================= 2. ALAS CON PERFIL SUSTENTADOR CURVADO =================
+      // 2. ALAS CON ORIENTACIÓN CORRECTA (Borde de ataque en +Z, borde de fuga en -Z)
       let wingPosY = 0;
       if (wingPos === 'high') wingPosY = fuseRadius * 0.85;
       if (wingPos === 'low') wingPosY = -fuseRadius * 0.65;
       const semiSpan = wingSpan / 2;
-      const fixedChord = wingChord * 0.76;
-      const ctrlChord = wingChord * 0.24;
+      const fixedChord = wingChord * 0.75;
+      const ctrlChord = wingChord * 0.25;
 
-      // Crear geometría de perfil aerodinámico (Camber curvado hacia arriba, intradós plano)
+      // Semialas fijas perfectamente simétricas
       [-1, 1].forEach(side => {
-        const wingShape = new THREE.Shape();
-        wingShape.moveTo(0, 0); // Borde de ataque
-        wingShape.quadraticCurveTo(fixedChord * 0.35, 0.16, fixedChord, 0.02); // Extradós curvo
-        wingShape.lineTo(fixedChord, -0.02);
-        wingShape.quadraticCurveTo(fixedChord * 0.35, -0.04, 0, 0); // Intradós plano
+        const wingBox = new THREE.Mesh(new THREE.BoxGeometry(semiSpan, 0.12, fixedChord), paintMat);
+        wingBox.castShadow = true;
+        // Posicionada con el borde de ataque apuntando hacia adelante (+Z)
+        wingBox.position.set(side * (semiSpan / 2), wingPosY, fixedChord * 0.15);
+        structGroup.add(wingBox);
 
-        const extrudeSettings = { steps: 1, depth: semiSpan, bevelEnabled: false };
-        const wingGeo = new THREE.ExtrudeGeometry(wingShape, extrudeSettings);
-        wingGeo.rotateY(side * Math.PI / 2);
-        wingGeo.translate(side > 0 ? 0 : 0, 0, 0);
-
-        const wingMesh = new THREE.Mesh(wingGeo, aircraftPaintMat);
-        wingMesh.castShadow = true;
-        wingMesh.receiveShadow = true;
-        wingMesh.position.set(0, wingPosY, -fixedChord * 0.35);
-        structGroup.add(wingMesh);
-
-        // Borde de ataque de aluminio pulido reflectante (De-icing boot)
-        if (isReal) {
-          const leadingEdge = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, semiSpan, 16), polishedAlumMat);
-          leadingEdge.rotateZ(Math.PI / 2);
-          leadingEdge.position.set(side * (semiSpan / 2), wingPosY, -fixedChord * 0.35);
-          structGroup.add(leadingEdge);
-        }
-
-        // Punteras alares aerodinámicas con luces de navegación
-        if (showWingtips) {
-          const tipCap = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 12), aircraftPaintMat);
-          tipCap.scale.set(1, 0.4, 2.5);
-          tipCap.position.set(side * semiSpan, wingPosY, 0);
-          structGroup.add(tipCap);
-
-          // Luz verde derecha / roja izquierda
-          const navColor = side > 0 ? 0x22c55e : 0xef4444;
-          const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), new THREE.MeshBasicMaterial({ color: navColor }));
-          navLight.position.set(side * (semiSpan + 0.03), wingPosY, -fixedChord * 0.2);
-          structGroup.add(navLight);
-        }
+        // Puntera alar con luz de navegación
+        const navLight = new THREE.Mesh(
+          new THREE.SphereGeometry(0.04, 8, 8),
+          new THREE.MeshBasicMaterial({ color: side > 0 ? 0x22c55e : 0xef4444 })
+        );
+        navLight.position.set(side * (semiSpan + 0.02), wingPosY, fixedChord * 0.15);
+        structGroup.add(navLight);
       });
 
-      // Superficies móviles (Alerones y Flaps articulados)
+      // Bisagra y eje de rotación en el borde de fuga (-Z)
+      const hingeZ = fixedChord * 0.15 - (fixedChord / 2);
       const aileronSpan = semiSpan * 0.45;
       const flapSpan = semiSpan * 0.45;
 
+      // ALERONES (Tercio exterior de cada ala)
       leftAileronMesh = new THREE.Group();
-      leftAileronMesh.position.set(-(semiSpan * 0.72), wingPosY, fixedChord * 0.65);
-      const lAil = new THREE.Mesh(new THREE.BoxGeometry(aileronSpan, 0.06, ctrlChord), isReal ? aircraftPaintMat : liveryStripeMat);
-      lAil.position.set(0, 0, ctrlChord / 2);
-      leftAileronMesh.add(lAil);
+      leftAileronMesh.position.set(-(semiSpan * 0.72), wingPosY, hingeZ);
+      const lAilGeom = new THREE.Mesh(new THREE.BoxGeometry(aileronSpan, 0.07, ctrlChord), stripeMat);
+      lAilGeom.position.set(0, 0, -ctrlChord / 2); // Eje en el borde anterior
+      leftAileronMesh.add(lAilGeom);
       structGroup.add(leftAileronMesh);
 
       rightAileronMesh = new THREE.Group();
-      rightAileronMesh.position.set((semiSpan * 0.72), wingPosY, fixedChord * 0.65);
-      const rAil = new THREE.Mesh(new THREE.BoxGeometry(aileronSpan, 0.06, ctrlChord), isReal ? aircraftPaintMat : liveryStripeMat);
-      rAil.position.set(0, 0, ctrlChord / 2);
-      rightAileronMesh.add(rAil);
+      rightAileronMesh.position.set((semiSpan * 0.72), wingPosY, hingeZ);
+      const rAilGeom = new THREE.Mesh(new THREE.BoxGeometry(aileronSpan, 0.07, ctrlChord), stripeMat);
+      rAilGeom.position.set(0, 0, -ctrlChord / 2);
+      rightAileronMesh.add(rAilGeom);
       structGroup.add(rightAileronMesh);
 
+      // FLAPS (Tercio interior junto al fuselaje)
       leftFlapMesh = new THREE.Group();
-      leftFlapMesh.position.set(-(semiSpan * 0.26), wingPosY - 0.02, fixedChord * 0.65);
-      const lFlap = new THREE.Mesh(new THREE.BoxGeometry(flapSpan, 0.06, ctrlChord), isReal ? aircraftPaintMat : liveryStripeMat);
-      lFlap.position.set(0, 0, ctrlChord / 2);
-      leftFlapMesh.add(lFlap);
+      leftFlapMesh.position.set(-(semiSpan * 0.26), wingPosY - 0.02, hingeZ);
+      const lFlapGeom = new THREE.Mesh(new THREE.BoxGeometry(flapSpan, 0.07, ctrlChord), paintMat);
+      lFlapGeom.position.set(0, 0, -ctrlChord / 2);
+      leftFlapMesh.add(lFlapGeom);
       structGroup.add(leftFlapMesh);
 
       rightFlapMesh = new THREE.Group();
-      rightFlapMesh.position.set((semiSpan * 0.26), wingPosY - 0.02, fixedChord * 0.65);
-      const rFlap = new THREE.Mesh(new THREE.BoxGeometry(flapSpan, 0.06, ctrlChord), isReal ? aircraftPaintMat : liveryStripeMat);
-      rFlap.position.set(0, 0, ctrlChord / 2);
-      rightFlapMesh.add(rFlap);
+      rightFlapMesh.position.set((semiSpan * 0.26), wingPosY - 0.02, hingeZ);
+      const rFlapGeom = new THREE.Mesh(new THREE.BoxGeometry(flapSpan, 0.07, ctrlChord), paintMat);
+      rFlapGeom.position.set(0, 0, -ctrlChord / 2);
+      rightFlapMesh.add(rFlapGeom);
       structGroup.add(rightFlapMesh);
 
-      // ================= 3. COLA, ESTABILIZADORES Y TIMÓN =================
+      // 3. EMPENAJE DE COLA
       const tailZPos = -(cabinLen / 2) - tailconeLen;
 
-      // Estabilizador Horizontal
-      const hStab = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.05, 0.45), aircraftPaintMat);
+      // Estabilizador Horizontal fijo + Elevador móvil
+      const hStab = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.05, 0.45), paintMat);
       hStab.position.set(0, fuseRadius * 0.25, tailZPos + 0.3);
       structGroup.add(hStab);
 
       elevatorMesh = new THREE.Group();
-      elevatorMesh.position.set(0, fuseRadius * 0.25, tailZPos + 0.08);
-      const elevGeom = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.04, 0.3), aircraftPaintMat);
-      elevGeom.position.set(0, 0, -0.15);
+      elevatorMesh.position.set(0, fuseRadius * 0.25, tailZPos + 0.075);
+      const elevGeom = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.04, 0.28), stripeMat);
+      elevGeom.position.set(0, 0, -0.14);
       elevatorMesh.add(elevGeom);
       structGroup.add(elevatorMesh);
 
-      // Deriva Vertical estilizada en flecha
-      const vStabGeo = new THREE.BoxGeometry(0.06, 1.45, 0.6);
-      const vStab = new THREE.Mesh(vStabGeo, aircraftPaintMat);
+      // Deriva Vertical fija + Timón móvil (Rudder)
+      const vStab = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.45, 0.55), paintMat);
       vStab.position.set(0, fuseRadius * 0.5 + 0.72, tailZPos + 0.25);
       structGroup.add(vStab);
 
       rudderMesh = new THREE.Group();
-      rudderMesh.position.set(0, fuseRadius * 0.5 + 0.72, tailZPos);
-      const rudGeom = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.4, 0.3), isReal ? liveryStripeMat : aircraftPaintMat);
+      rudderMesh.position.set(0, fuseRadius * 0.5 + 0.72, tailZPos - 0.025);
+      const rudGeom = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.4, 0.3), stripeMat);
       rudGeom.position.set(0, 0, -0.15);
       rudderMesh.add(rudGeom);
       structGroup.add(rudderMesh);
 
-      // ================= 4. TREN DE ATERRIZAJE REALISTA (LANDING GEAR) =================
-      if (showGear) {
-        // Tren Principal (Izquierda y Derecha)
-        [-1, 1].forEach(side => {
-          const gearGroup = new THREE.Group();
-          gearGroup.position.set(side * (semiSpan * 0.28), wingPosY, 0);
-
-          // Pata / Amortiguador telescópico
-          const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.95, 12), polishedAlumMat);
-          strut.position.set(0, -0.45, 0);
-          gearGroup.add(strut);
-
-          // Llanta y Neumático
-          const wheelGroup = new THREE.Group();
-          wheelGroup.position.set(0, -0.92, 0);
-
-          const tire = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.08, 12, 24), tireRubberMat);
-          tire.rotation.y = Math.PI / 2;
-          wheelGroup.add(tire);
-
-          const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.12, 16), rimChromeMat);
-          rim.rotation.z = Math.PI / 2;
-          wheelGroup.add(rim);
-
-          gearGroup.add(wheelGroup);
-          structGroup.add(gearGroup);
-        });
-
-        // Tren de Morro (Nose Gear direccional)
-        const noseGear = new THREE.Group();
-        noseGear.position.set(0, -fuseRadius * 0.1, (cabinLen / 2) + noseLen * 0.5);
-
-        const noseStrut = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.95, 12), polishedAlumMat);
-        noseStrut.position.set(0, -0.45, 0);
-        noseGear.add(noseStrut);
-
-        const noseWheel = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.06, 12, 24), tireRubberMat);
-        noseWheel.rotation.y = Math.PI / 2;
-        noseWheel.position.set(0, -0.92, 0);
-        noseGear.add(noseWheel);
-
-        structGroup.add(noseGear);
-      }
-
-      // ================= 5. CABINA INTERIOR (YOKE Y TABLERO) =================
+      // 4. CABINA Y MANUBRIO (YOKE)
       const cockpitGroup = new THREE.Group();
       cockpitGroup.position.set(0, 0, 0.15);
 
-      const panelMesh = new THREE.Mesh(new THREE.BoxGeometry(fuseRadius * 1.5, fuseRadius * 0.8, 0.08), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 }));
+      const panelMesh = new THREE.Mesh(new THREE.BoxGeometry(fuseRadius * 1.5, fuseRadius * 0.8, 0.08), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
       panelMesh.position.set(0, fuseRadius * 0.1, 0.65);
       cockpitGroup.add(panelMesh);
 
@@ -934,47 +824,114 @@
       cockpitGroup.add(cockpitColumn);
       structGroup.add(cockpitGroup);
 
-      // ================= 6. HÉLICE REALISTA Y EFECTO MOTION BLUR =================
+      // 5. POLEAS FUNCIONALES Y CIRCUITOS DE MANDOS (ETAPA SISTEMAS)
+      function makePulley(radius, thickness) {
+        const pGroup = new THREE.Group();
+        const rim = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, thickness, 16), pulleySteelMat);
+        rim.rotateX(Math.PI / 2);
+        pGroup.add(rim);
+        const groove = new THREE.Mesh(new THREE.TorusGeometry(radius * 0.85, 0.008, 6, 16), new THREE.MeshBasicMaterial({ color: 0x334155 }));
+        pGroup.add(groove);
+        return pGroup;
+      }
+
+      // A. Polea central de alerones bajo cabina
+      centralAileronPulley = makePulley(0.09, 0.04);
+      centralAileronPulley.position.set(0, wingPosY - 0.05, 0.2);
+      systemsGroup.add(centralAileronPulley);
+
+      // B. Poleas de reenvío alar (Izquierda y Derecha)
+      leftAileronPulley = makePulley(0.07, 0.03);
+      leftAileronPulley.position.set(-(semiSpan * 0.72), wingPosY, hingeZ + 0.12);
+      systemsGroup.add(leftAileronPulley);
+
+      rightAileronPulley = makePulley(0.07, 0.03);
+      rightAileronPulley.position.set((semiSpan * 0.72), wingPosY, hingeZ + 0.12);
+      systemsGroup.add(rightAileronPulley);
+
+      // Cables tensados de alerones (Cyan)
+      [-1, 1].forEach(side => {
+        const wireGeo = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(0, wingPosY - 0.05, 0.2),
+          new THREE.Vector3(side * (semiSpan * 0.72), wingPosY, hingeZ + 0.12),
+          new THREE.Vector3(side * (semiSpan * 0.72), wingPosY, hingeZ)
+        ]);
+        systemsGroup.add(new THREE.Line(wireGeo, aileronCableMat));
+      });
+
+      // C. Tambor de Flaps (Amarillo)
+      flapDrum = makePulley(0.08, 0.06);
+      flapDrum.position.set(0, wingPosY - 0.08, 0.05);
+      systemsGroup.add(flapDrum);
+
+      [-1, 1].forEach(side => {
+        const flapWireGeo = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(0, wingPosY - 0.08, 0.05),
+          new THREE.Vector3(side * (semiSpan * 0.26), wingPosY - 0.02, hingeZ)
+        ]);
+        systemsGroup.add(new THREE.Line(flapWireGeo, flapCableMat));
+      });
+
+      // D. Balancín acodado de timón y elevador en cola (Naranja)
+      tailBellcrank = makePulley(0.08, 0.04);
+      tailBellcrank.position.set(0, fuseRadius * 0.1, tailZPos + 0.35);
+      systemsGroup.add(tailBellcrank);
+
+      const tailWireGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, -fuseRadius * 0.1, 0.3),
+        new THREE.Vector3(0, fuseRadius * 0.1, tailZPos + 0.35),
+        new THREE.Vector3(0, fuseRadius * 0.25, tailZPos + 0.08)
+      ]);
+      systemsGroup.add(new THREE.Line(tailWireGeo, tailCableMat));
+
+      // 6. TREN DE ATERRIZAJE
+      if (showGear) {
+        [-1, 1].forEach(side => {
+          const gear = new THREE.Group();
+          gear.position.set(side * (semiSpan * 0.28), wingPosY, fixedChord * 0.15);
+
+          const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.95, 12), polishedAlumMat);
+          strut.position.set(0, -0.45, 0);
+          gear.add(strut);
+
+          const tire = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.08, 12, 24), tireMat);
+          tire.rotation.y = Math.PI / 2;
+          tire.position.set(0, -0.92, 0);
+          gear.add(tire);
+
+          structGroup.add(gear);
+        });
+
+        const noseGear = new THREE.Group();
+        noseGear.position.set(0, -fuseRadius * 0.1, (cabinLen / 2) + noseLen * 0.5);
+        const nStrut = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.95, 12), polishedAlumMat);
+        nStrut.position.set(0, -0.45, 0);
+        noseGear.add(nStrut);
+        const nTire = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.06, 12, 24), tireMat);
+        nTire.rotation.y = Math.PI / 2;
+        nTire.position.set(0, -0.92, 0);
+        noseGear.add(nTire);
+        structGroup.add(noseGear);
+      }
+
+      // 7. HÉLICE
       const engineMountZ = (cabinLen / 2) + noseLen;
       propAssembly = new THREE.Group();
       propAssembly.position.set(0, -fuseRadius * 0.08, engineMountZ + 0.2);
 
-      // Spinner cónico cromado / aluminio
       const spinner = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.42, 24), polishedAlumMat);
       spinner.rotateX(Math.PI / 2);
       spinner.position.set(0, 0, 0.21);
       propAssembly.add(spinner);
 
-      // Palas con perfil de paso variable
       const bladeLen = propDiam / 2;
       for (let b = 0; b < propBladesCount; b++) {
         const angle = (b * (2 * Math.PI)) / propBladesCount;
-        const bladeGeo = new THREE.BoxGeometry(0.11, bladeLen, 0.02);
-        const blade = new THREE.Mesh(bladeGeo, new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.3 }));
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.11, bladeLen, 0.02), new THREE.MeshStandardMaterial({ color: 0x09090b }));
         blade.position.set((Math.sin(angle) * bladeLen) / 2, (Math.cos(angle) * bladeLen) / 2, 0);
         blade.rotation.z = -angle;
-
-        // Puntas de pala de alta visibilidad (amarillo reglamentario FAA/OACI)
-        const tipGeo = new THREE.BoxGeometry(0.112, 0.08, 0.022);
-        const tipMesh = new THREE.Mesh(tipGeo, new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
-        tipMesh.position.set(0, bladeLen / 2 - 0.04, 0);
-        blade.add(tipMesh);
-
         propAssembly.add(blade);
       }
-
-      // Disco semitransparente de rotación de hélice para efecto Motion Blur real
-      const blurGeo = new THREE.CircleGeometry(bladeLen, 32);
-      const blurMat = new THREE.MeshBasicMaterial({
-        color: 0xe2e8f0,
-        transparent: true,
-        opacity: 0.0,
-        side: THREE.DoubleSide
-      });
-      propBlurDisk = new THREE.Mesh(blurGeo, blurMat);
-      propBlurDisk.position.set(0, 0, 0.02);
-      propAssembly.add(propBlurDisk);
-
       powerGroup.add(propAssembly);
 
       applyControlDeflections();
@@ -985,12 +942,12 @@
       if (!renderer || !scene || !camera) return;
       renderer.render(scene, camera);
       const a = document.createElement('a');
-      a.download = `AeroStudio_${renderStyle}_render.png`;
+      a.download = `AeroStudio_${renderStyle}.png`;
       a.href = renderer.domElement.toDataURL('image/png');
       a.click();
     }
 
-    // --- BUCLE DE ANIMACIÓN Y RENDERIZADO ---
+    // --- ANIMACIÓN ---
     function animate() {
       requestAnimationFrame(animate);
 
@@ -1003,15 +960,6 @@
       if (propAssembly && engineRPM > 0) {
         engineAngle += engineRPM;
         propAssembly.rotation.z = engineAngle;
-
-        // En modo realista, si la hélice gira rápido se activa el disco de desenfoque de movimiento
-        if (propBlurDisk) {
-          if (renderStyle === 'realistic' && engineRPM > 0.25) {
-            propBlurDisk.material.opacity = Math.min(0.28, engineRPM * 0.45);
-          } else {
-            propBlurDisk.material.opacity = 0;
-          }
-        }
       }
 
       if (renderer && scene && camera) {
