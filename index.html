@@ -22,6 +22,7 @@
 </head>
 <body>
 
+  <!-- Contenedor 3D Three.js -->
   <div id="canvas-container"></div>
 
   <!-- Encabezado Superior -->
@@ -32,9 +33,9 @@
       </div>
       <div>
         <h1 class="font-bold text-base sm:text-lg tracking-wide text-slate-100 flex items-center gap-2">
-          AeroStudio 3D <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">v4.0 Cinemática</span>
+          AeroStudio 3D <span class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">v4.1 Operativo</span>
         </h1>
-        <p class="text-[11px] text-slate-400 hidden sm:block">Clic Izq: Rotar | Clic Der: Trasladar (Pan) | Rueda: Zoom</p>
+        <p class="text-[11px] text-slate-400 hidden sm:block">Clic Izq: Orbitar | Clic Der: Trasladar (Pan) | Rueda: Zoom</p>
       </div>
     </div>
 
@@ -43,8 +44,8 @@
       <div class="flex bg-slate-800 p-1 rounded-lg border border-slate-700 text-xs">
         <button onclick="setCameraView('iso')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Avión</button>
         <button onclick="focusEngine()" class="px-2.5 py-1 rounded hover:bg-sky-600/80 bg-sky-950/60 text-sky-300 font-semibold border border-sky-600/50">Foco Motor</button>
-        <button onclick="setCameraView('top')" class="px-2 py-1 rounded hover:bg-slate-700 text-slate-200">Planta</button>
-        <button onclick="setCameraView('side')" class="px-2 py-1 rounded hover:bg-slate-700 text-slate-200">Perfil</button>
+        <button onclick="setCameraView('top')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Planta</button>
+        <button onclick="setCameraView('side')" class="px-2.5 py-1 rounded hover:bg-slate-700 text-slate-200">Perfil</button>
       </div>
       <button onclick="takeScreenshot()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-slate-200 transition">
         <i class="fa-solid fa-camera mr-1"></i> Captura
@@ -169,7 +170,7 @@
           <div class="p-2 rounded bg-slate-900/80 border border-slate-800 space-y-1.5 text-[11px]">
             <div class="flex items-center gap-2">
               <span class="w-3 h-3 rounded-full bg-cyan-400 inline-block"></span>
-              <span class="text-slate-200">Alerones (Cyan): Cabina &rarr; Puntas alares</span>
+              <span class="text-slate-200">Alerones (Cyan): Cabina &rarr; Puntas</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>
@@ -298,22 +299,21 @@
     let renderStyle = 'xray';
     let propBladesCount = 2;
 
-    // Estado del motor y simulación mecánica
+    // Estado del motor
     let isEngineRunning = false;
-    let engineAngle = 0; // Ángulo del cigüeñal en radianes
+    let engineAngle = 0;
     let engineRPM = 0;
 
     let scene, camera, renderer;
     let planeGroup, structGroup, systemsGroup, powerGroup;
 
-    // Referencias mecánicas para cinemática en animate()
     let propAssembly = null;
     let crankshaftMesh = null;
     let camshaftMesh = null;
-    let pistonMeshes = []; // Array de { mesh, side, cylinderIndex, rodMesh, basePos }
+    let pistonMeshes = [];
     let valveMeshes = [];
 
-    // --- CONTROLES DE CÁMARA (ÓRBITA + TRASLACIÓN/PAN NATIVOS) ---
+    // Cámara (Órbita + Pan)
     let isOrbiting = false;
     let isPanning = false;
     let lastMousePos = { x: 0, y: 0 };
@@ -364,17 +364,12 @@
       window.addEventListener('resize', onResize);
     }
 
-    // --- MANEJADOR DE MOUSE CON TRASLACIÓN LIBRE (PAN) ---
     function initAdvancedControls(el) {
-      // Bloquear menú contextual de clic derecho para usarlo en paneo
       el.addEventListener('contextmenu', (e) => e.preventDefault());
 
       el.addEventListener('mousedown', (e) => {
-        if (e.button === 0) {
-          isOrbiting = true;
-        } else if (e.button === 2) {
-          isPanning = true;
-        }
+        if (e.button === 0) isOrbiting = true;
+        if (e.button === 2) isPanning = true;
         lastMousePos = { x: e.clientX, y: e.clientY };
       });
 
@@ -383,12 +378,10 @@
         const dy = e.clientY - lastMousePos.y;
 
         if (isOrbiting) {
-          // Rotación orbital
           spherical.theta -= dx * 0.007;
           spherical.phi = Math.max(0.08, Math.min(Math.PI - 0.08, spherical.phi - dy * 0.007));
           updateCamera();
         } else if (isPanning) {
-          // Traslación en el plano perpendicular a la vista de la cámara
           const panSpeed = spherical.radius * 0.0015;
           const forward = new THREE.Vector3().subVectors(cameraTarget, camera.position).normalize();
           const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
@@ -413,7 +406,7 @@
         updateCamera();
       }, { passive: false });
 
-      // Soporte táctil móvil (1 dedo: orbitar, 2 dedos: paneo y zoom)
+      // Touch móvil
       let touchStartDist = 0;
       let lastTouchPos = { x: 0, y: 0 };
 
@@ -487,15 +480,13 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // --- BOTÓN DE ENFOQUE AL MOTOR ---
     function focusEngine() {
       const cabinLen = parseFloat(document.getElementById('cabin-len').value);
       const noseLen = parseFloat(document.getElementById('nose-len').value);
       const engineZ = (cabinLen / 2) + noseLen + 0.3;
 
-      // Centrar el objetivo exactamente en el bloque del motor
       cameraTarget.set(0, 0, engineZ);
-      spherical.radius = 3.5; // Zoom cercano de inspección
+      spherical.radius = 3.5;
       spherical.phi = Math.PI / 2.8;
       spherical.theta = Math.PI / 3;
       updateCamera();
@@ -583,7 +574,7 @@
       buildAircraft();
     }
 
-    // --- CONSTRUCCIÓN DEL MODELO 3D COMPLETO ---
+    // --- CONSTRUCTOR ROBUSTO DEL MODELO ---
     function buildAircraft() {
       if (!scene || !planeGroup) return;
 
@@ -602,24 +593,30 @@
       const showTanks = document.getElementById('show-tanks').checked;
       const fuelLoc = document.getElementById('fuel-loc').value;
 
-      // Opciones de detalle mecánico del motor
       const showEngineBlock = document.getElementById('show-engine-block').checked;
       const showEngineInternals = document.getElementById('show-engine-internals').checked;
       const showEngineValves = document.getElementById('show-engine-valves').checked;
       const isCrankcaseTransparent = document.getElementById('transparent-crankcase').checked;
       const propDiam = parseFloat(document.getElementById('prop-diam').value);
+      const powerHp = parseFloat(document.getElementById('power-hp').value);
 
-      // UI Texts
-      document.getElementById('val-nose-len').textContent = noseLen.toFixed(1) + ' m';
-      document.getElementById('val-nose-taper').textContent = document.getElementById('nose-taper').value + '%';
-      document.getElementById('val-cabin-len').textContent = cabinLen.toFixed(1) + ' m';
-      document.getElementById('val-fuse-width').textContent = (fuseRadius * 2).toFixed(1) + ' m';
-      document.getElementById('val-tailcone-len').textContent = tailconeLen.toFixed(1) + ' m';
-      document.getElementById('val-wing-span').textContent = wingSpan.toFixed(1) + ' m';
-      document.getElementById('val-wing-chord').textContent = wingChord.toFixed(1) + ' m';
-      document.getElementById('val-prop-diam').textContent = propDiam.toFixed(2) + ' m';
+      // Actualizar de forma segura textos que existan
+      const setTxt = (id, txt) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = txt;
+      };
 
-      // Reset
+      setTxt('val-nose-len', noseLen.toFixed(1) + ' m');
+      setTxt('val-nose-taper', document.getElementById('nose-taper').value + '%');
+      setTxt('val-cabin-len', cabinLen.toFixed(1) + ' m');
+      setTxt('val-fuse-width', (fuseRadius * 2).toFixed(1) + ' m');
+      setTxt('val-tailcone-len', tailconeLen.toFixed(1) + ' m');
+      setTxt('val-wing-span', wingSpan.toFixed(1) + ' m');
+      setTxt('val-wing-chord', wingChord.toFixed(1) + ' m');
+      setTxt('val-prop-diam', propDiam.toFixed(2) + ' m');
+      setTxt('val-power-hp', powerHp + ' HP');
+
+      // Limpieza segura
       while (planeGroup.children.length > 0) {
         planeGroup.remove(planeGroup.children[0]);
       }
@@ -657,8 +654,7 @@
       const fuelMat = new THREE.MeshStandardMaterial({ color: 0x10b981, transparent: true, opacity: 0.75 });
       const propMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 });
 
-      // ================= 1. ESTRUCTURA =================
-      // Cabina
+      // 1. ESTRUCTURA
       const cabinGeo = new THREE.CylinderGeometry(fuseRadius, fuseRadius, cabinLen, 24);
       cabinGeo.rotateX(Math.PI / 2);
       structGroup.add(new THREE.Mesh(cabinGeo, skinMat));
@@ -670,7 +666,6 @@
       canopy.position.set(0, fuseRadius * 0.25, cabinLen * 0.15);
       structGroup.add(canopy);
 
-      // Morro cerrando hacia adelante
       const noseTipRadius = fuseRadius * noseTaperPercent;
       const noseGeo = new THREE.CylinderGeometry(noseTipRadius, fuseRadius, noseLen, 24);
       noseGeo.rotateX(Math.PI / 2);
@@ -679,14 +674,12 @@
       noseMesh.position.set(0, -fuseRadius * 0.08, noseCenterZ);
       structGroup.add(noseMesh);
 
-      // Cono Cola
       const tailconeGeo = new THREE.CylinderGeometry(fuseRadius, fuseRadius * 0.2, tailconeLen, 24);
       tailconeGeo.rotateX(Math.PI / 2);
       const tailconeMesh = new THREE.Mesh(tailconeGeo, skinMat);
       tailconeMesh.position.set(0, 0, -(cabinLen / 2) - (tailconeLen / 2));
       structGroup.add(tailconeMesh);
 
-      // Cuadernas
       if (showFrames) {
         for (let i = -1; i <= 1; i++) {
           const frame = new THREE.Mesh(new THREE.RingGeometry(fuseRadius * 0.35, fuseRadius * 0.96, 20), frameMat);
@@ -695,7 +688,6 @@
         }
       }
 
-      // Alas
       let wingPosY = 0;
       if (wingPos === 'high') wingPosY = fuseRadius * 0.85;
       if (wingPos === 'low') wingPosY = -fuseRadius * 0.65;
@@ -707,7 +699,6 @@
         structGroup.add(wing);
       });
 
-      // Cola
       const tailZPos = -(cabinLen / 2) - tailconeLen;
       const hTail = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.05, 0.7), wingMat);
       hTail.position.set(0, fuseRadius * 0.25, tailZPos + 0.2);
@@ -717,14 +708,13 @@
       vTail.position.set(0, fuseRadius * 0.5 + 0.75, tailZPos + 0.1);
       structGroup.add(vTail);
 
-      // ================= 2. SISTEMAS =================
+      // 2. SISTEMAS
       if (showControlsSys) {
         const aileronWireMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
         const flapWireMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
         const rudderWireMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
 
         [-1, 1].forEach(side => {
-          // Alerón
           const aileronLine = new THREE.Line(
             new THREE.BufferGeometry().setFromPoints([
               new THREE.Vector3(0, wingPosY, 0),
@@ -734,7 +724,6 @@
           );
           systemsGroup.add(aileronLine);
 
-          // Flap
           const flapLine = new THREE.Line(
             new THREE.BufferGeometry().setFromPoints([
               new THREE.Vector3(0, wingPosY - 0.05, 0),
@@ -745,7 +734,6 @@
           systemsGroup.add(flapLine);
         });
 
-        // Timón
         systemsGroup.add(new THREE.Line(
           new THREE.BufferGeometry().setFromPoints([
             new THREE.Vector3(0, -0.1, 0.1),
@@ -763,13 +751,12 @@
         });
       }
 
-      // ================= 3. PLANTA DE PODER: MOTOR BOXER DETALLADO =================
+      // 3. PLANTA DE PODER (BOXER CINEMÁTICO)
       const engineZ = (cabinLen / 2) + noseLen + 0.15;
       const engineOrigin = new THREE.Group();
       engineOrigin.position.set(0, -fuseRadius * 0.08, engineZ);
       powerGroup.add(engineOrigin);
 
-      // Materiales mecánicos especializados
       const steelMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.2 });
       const pistonAlloyMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.15 });
       const brassMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.8, roughness: 0.3 });
@@ -783,25 +770,20 @@
       });
       crankcaseMat.userData = { baseOpacity: isCrankcaseTransparent ? 0.35 : 0.95 };
 
-      // 3A. Cárter Central y Camisas de Cilindro
       if (showEngineBlock) {
-        // Bloque central cárter
         const crankcaseBox = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.36, 0.65), crankcaseMat);
         engineOrigin.add(crankcaseBox);
 
-        // 4 Camisas de cilindros con aletas de refrigeración (2 por lado)
         const cylinderOffsetsZ = [-0.15, 0.15];
         [-1, 1].forEach(side => {
-          cylinderOffsetsZ.forEach((zPos, cIdx) => {
+          cylinderOffsetsZ.forEach((zPos) => {
             const cylinderGroup = new THREE.Group();
             cylinderGroup.position.set(side * 0.28, 0, zPos);
             cylinderGroup.rotation.z = side * Math.PI / 2;
 
-            // Camisa principal
             const sleeveGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.32, 16);
             cylinderGroup.add(new THREE.Mesh(sleeveGeo, crankcaseMat));
 
-            // Aletas de refrigeración externa
             for (let f = -0.12; f <= 0.12; f += 0.04) {
               const fin = new THREE.Mesh(new THREE.RingGeometry(0.11, 0.16, 16), steelMat);
               fin.rotation.x = Math.PI / 2;
@@ -809,12 +791,10 @@
               cylinderGroup.add(fin);
             }
 
-            // Culata de cilindro (Cylinder head)
             const head = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.08, 0.22), steelMat);
             head.position.y = 0.18;
             cylinderGroup.add(head);
 
-            // Bujía con cable
             const sparkPlug = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.08, 8), brassMat);
             sparkPlug.position.set(0, 0.24, 0);
             cylinderGroup.add(sparkPlug);
@@ -824,14 +804,11 @@
         });
       }
 
-      // 3B. Cigüeñal Longitudinal Central
       crankshaftMesh = new THREE.Group();
-      // Eje principal
       const crankShaftMain = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.72, 16), steelMat);
       crankShaftMain.rotateX(Math.PI / 2);
       crankshaftMesh.add(crankShaftMain);
 
-      // Brazos / Muñequillas acodadas del cigüeñal
       const crankOffsetsZ = [-0.2, -0.07, 0.07, 0.2];
       crankOffsetsZ.forEach((cz, i) => {
         const crankWeb = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.03), steelMat);
@@ -840,12 +817,10 @@
       });
       engineOrigin.add(crankshaftMesh);
 
-      // 3C. Pistones y Bielas Móviles
       if (showEngineInternals) {
-        const stroke = 0.09; // Radio de manivela (mitad de carrera)
-        const rodLength = 0.22; // Longitud de la biela
+        const stroke = 0.09;
+        const rodLength = 0.22;
 
-        // 4 Pistones: 2 izquierda (side = -1), 2 derecha (side = 1)
         const pistonConfigs = [
           { side: -1, z: -0.15, phase: 0 },
           { side: 1, z: -0.15, phase: Math.PI },
@@ -854,15 +829,11 @@
         ];
 
         pistonConfigs.forEach(cfg => {
-          // Grupo del Pistón
           const pGroup = new THREE.Group();
-          
-          // Cabeza del pistón
           const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.095, 0.12, 16), pistonAlloyMat);
           crown.rotation.z = cfg.side * Math.PI / 2;
           pGroup.add(crown);
 
-          // Ranuras de aros de compresión
           for (let r = -0.03; r <= 0.03; r += 0.03) {
             const ring = new THREE.Mesh(new THREE.TorusGeometry(0.096, 0.004, 6, 16), brassMat);
             ring.rotation.y = Math.PI / 2;
@@ -870,7 +841,6 @@
             pGroup.add(ring);
           }
 
-          // Biela articulada (Connecting rod)
           const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, rodLength, 8), steelMat);
           rod.position.x = -cfg.side * (rodLength / 2);
           rod.rotation.z = cfg.side * Math.PI / 2;
@@ -885,22 +855,19 @@
             z: cfg.z,
             phase: cfg.phase,
             baseX: cfg.side * 0.24,
-            stroke: stroke,
-            rodLen: rodLength
+            stroke: stroke
           });
         });
       }
 
-      // 3D. Árbol de Levas y Válvulas
       if (showEngineValves) {
         camshaftMesh = new THREE.Group();
-        camshaftMesh.position.set(0, -0.14, 0); // Ubicado debajo del cigüeñal
+        camshaftMesh.position.set(0, -0.14, 0);
 
         const camShaftBar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.65, 12), steelMat);
         camShaftBar.rotateX(Math.PI / 2);
         camshaftMesh.add(camShaftBar);
 
-        // Levas excéntricas
         for (let l = -0.22; l <= 0.22; l += 0.07) {
           const camLob = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.025, 12), steelMat);
           camLob.rotateX(Math.PI / 2);
@@ -909,13 +876,11 @@
         }
         engineOrigin.add(camshaftMesh);
 
-        // Válvulas en las culatas (Admisión y Escape por cilindro)
         [-1, 1].forEach(side => {
           [-0.18, -0.12, 0.12, 0.18].forEach(zv => {
             const valveGroup = new THREE.Group();
             valveGroup.position.set(side * 0.44, 0.06, zv);
 
-            // Vástago y resorte
             const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.09, 8), steelMat);
             stem.rotation.z = side * Math.PI / 2;
             valveGroup.add(stem);
@@ -930,7 +895,6 @@
         });
       }
 
-      // 3E. Conjunto Hélice y Spinner
       propAssembly = new THREE.Group();
       propAssembly.position.set(0, 0, 0.42);
 
@@ -957,7 +921,6 @@
       if (view === 'iso') { spherical.radius = 16; spherical.phi = Math.PI / 3; spherical.theta = Math.PI / 4; }
       if (view === 'top') { spherical.radius = 18; spherical.phi = 0.05; spherical.theta = 0; }
       if (view === 'side') { spherical.radius = 18; spherical.phi = Math.PI / 2; spherical.theta = Math.PI / 2; }
-      if (view === 'front') { spherical.radius = 18; spherical.phi = Math.PI / 2; spherical.theta = 0; }
       updateCamera();
     }
 
@@ -970,11 +933,9 @@
       a.click();
     }
 
-    // --- BUCLE DE ANIMACIÓN Y CINEMÁTICA MECÁNICA EN DIRECTO ---
     function animate() {
       requestAnimationFrame(animate);
 
-      // Simulación física de revoluciones
       if (isEngineRunning) {
         engineRPM = Math.min(0.48, engineRPM + 0.015);
       } else {
@@ -984,27 +945,20 @@
       if (engineRPM > 0) {
         engineAngle += engineRPM;
 
-        // 1. Giro del cigüeñal y hélice
         if (crankshaftMesh) crankshaftMesh.rotation.z = engineAngle;
         if (propAssembly) propAssembly.rotation.z = engineAngle;
-
-        // 2. Giro del árbol de levas (a la mitad de velocidad que el cigüeñal: relación 1:2 de 4 tiempos)
         if (camshaftMesh) camshaftMesh.rotation.z = engineAngle * 0.5;
 
-        // 3. Cinemática recíproca de pistones y bielas en tiempo real:
-        // x(t) = r * cos(theta + phase)
         pistonMeshes.forEach(p => {
           const displacement = Math.cos(engineAngle + p.phase) * p.stroke;
           p.group.position.x = p.baseX + (p.side * displacement);
           p.group.position.z = p.z;
 
-          // Oscilación angular de la biela
           if (p.rod) {
             p.rod.rotation.z = (p.side * Math.PI / 2) + Math.sin(engineAngle + p.phase) * 0.22;
           }
         });
 
-        // 4. Apertura y cierre de válvulas
         valveMeshes.forEach((v, idx) => {
           const valveLift = Math.max(0, Math.sin((engineAngle * 0.5) + idx * 1.5)) * 0.025;
           v.group.position.x = v.baseX + (v.side * valveLift);
